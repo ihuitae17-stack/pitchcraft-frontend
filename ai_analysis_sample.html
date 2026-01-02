@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pitch Craft - AI 분석 리포트</title>
+    <style>
+        :root {
+            --bg-color: #F8F9FA;
+            --card-bg: #FFFFFF;
+            --primary-color: #00C853;
+            --text-color: #333;
+            --text-sub: #666;
+            --accent-red: #FF5252;
+            --accent-blue: #448AFF;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-bottom: 40px;
+        }
+
+        header {
+            background: var(--card-bg);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .close-btn {
+            font-size: 24px;
+            text-decoration: none;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Visual Section */
+        .visual-card {
+            background: #1a1a1a;
+            /* Dark for contrast */
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .skeleton-loader {
+            width: 200px;
+            height: 300px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Simple CSS Skeleton Animation */
+        .bone {
+            position: absolute;
+            background: var(--primary-color);
+            border-radius: 10px;
+            opacity: 0.8;
+        }
+
+        .head {
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--primary-color);
+            border-radius: 50%;
+            top: 20px;
+            left: 85px;
+            background: transparent;
+        }
+
+        .spine {
+            width: 4px;
+            height: 80px;
+            top: 50px;
+            left: 98px;
+        }
+
+        .shoulders {
+            width: 60px;
+            height: 4px;
+            top: 55px;
+            left: 70px;
+        }
+
+        .arm-l {
+            width: 4px;
+            height: 50px;
+            top: 55px;
+            left: 70px;
+            transform-origin: top;
+            animation: swing 2s infinite ease-in-out;
+        }
+
+        .arm-r {
+            width: 4px;
+            height: 50px;
+            top: 55px;
+            left: 130px;
+            transform-origin: top;
+            animation: throw 2s infinite ease-in-out;
+        }
+
+        .leg-l {
+            width: 4px;
+            height: 80px;
+            top: 130px;
+            left: 90px;
+            transform-origin: top;
+            transform: rotate(10deg);
+        }
+
+        .leg-r {
+            width: 4px;
+            height: 80px;
+            top: 130px;
+            left: 110px;
+            transform-origin: top;
+            transform: rotate(-5deg);
+        }
+
+        @keyframes throw {
+            0% {
+                transform: rotate(-20deg);
+            }
+
+            50% {
+                transform: rotate(-160deg);
+            }
+
+            100% {
+                transform: rotate(-20deg);
+            }
+        }
+
+        .score-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 200, 83, 0.2);
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* Stats Section */
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .score-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .total-score {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .score-num {
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--primary-color);
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .score-text {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .stat-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .stat-label {
+            width: 80px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .progress-bg {
+            flex: 1;
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 0 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 5px;
+        }
+
+        .stat-val {
+            width: 40px;
+            text-align: right;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* Comparison Section */
+        .compare-box {
+            background: #E3F2FD;
+            border: 1px solid #BBDEFB;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .compare-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #90CAF9;
+            object-fit: cover;
+        }
+
+        .compare-text {
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #1565C0;
+        }
+
+        /* Action Buttons */
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 200, 83, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 1px solid #ddd;
+            color: #333;
+        }
+
+        .coach-note {
+            background: #FFF3E0;
+            border-left: 4px solid #FF9800;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #E65100;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <span class="header-title">📋 분석 결과</span>
+        <a href="index.html" class="close-btn">&times;</a>
+    </header>
+
+    <div class="container">
+        <!-- Visuals -->
+        <div class="visual-card">
+            <div class="score-badge">폼 유사도 82%</div>
+            <div class="skeleton-loader">
+                <div class="bone head"></div>
+                <div class="bone spine"></div>
+                <div class="bone shoulders"></div>
+                <div class="bone arm-l"></div>
+                <div class="bone arm-r"></div>
+                <div class="bone leg-l"></div>
+                <div class="bone leg-r"></div>
+            </div>
+            <p style="margin-top: 20px; font-size: 14px; color: #bbb;">AI가 추출한 투구 폼 스켈레톤</p>
+        </div>
+
+        <!-- Scores -->
+        <div class="score-card">
+            <div class="total-score">
+                <div class="score-num">82</div>
+                <div class="score-text">종합 점수 (S급)</div>
+            </div>
+
+            <div class="stat-row">
+                <span class="stat-label">상체 밸런스</span>
+                <div class="progress-bg">
+                    <div class="progress-fill" style="width: 85%; background: #00C853;"></div>
+                </div>
+                <span class="stat-val">85</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">하체 중심</span>
+                <div class="progress-bg">
+                    <div class="progress-fill" style="width: 90%; background: #00C853;"></div>
+                </div>
+                <span class="stat-val">90</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">팔 각도</span>
+                <div class="progress-bg">
+                    <div class="progress-fill" style="width: 60%; background: #FF5252;"></div>
+                </div>
+                <span class="stat-val">60</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">유연성</span>
+                <div class="progress-bg">
+                    <div class="progress-fill" style="width: 78%; background: #FFC107;"></div>
+                </div>
+                <span class="stat-val">78</span>
+            </div>
+        </div>
+
+        <!-- Comparison -->
+        <div class="section-title">🏆 프로 선수 비교</div>
+        <div class="compare-box">
+            <div class="compare-img" style="display:flex; align-items:center; justify-content:center; font-size:24px;">⚾
+            </div>
+            <div class="compare-text">
+                회원님의 폼은 <strong>류현진 선수</strong>와 가장 유사합니다.<br>
+                특히 하체 이동 메커니즘이 <strong>92%</strong> 일치합니다!
+            </div>
+        </div>
+
+        <!-- Feedback -->
+        <div class="section-title">💡 코치 피드백</div>
+        <div class="coach-note">
+            <strong>[요약]</strong> 릴리스 포인트가 조금 불안정합니다.<br><br>
+            투구 시 팔꿈치가 어깨보다 약 10도 낮게 형성되고 있습니다. 이로 인해 공의 회전축이 흔들릴 수 있으니, <strong>팔꿈치를 귀 옆에 붙인다는 느낌</strong>으로 의식적으로
+            높여보세요. 구속이 <strong>3~5km/h</strong> 상승할 잠재력이 있습니다!
+        </div>
+
+        <!-- Buttons -->
+        <div class="btn-container">
+            <button class="btn btn-secondary" onclick="window.location.href='index.html'">다시 분석하기</button>
+            <button class="btn btn-primary" onclick="alert('결과가 저장되었습니다!')">결과 저장</button>
+        </div>
+    </div>
+
+</body>
+
+</html>

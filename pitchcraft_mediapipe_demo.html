@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PitchCraft - MediaPipe 투구 폼 분석 데모</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            color: #f8fafc;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00e676, #2979ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .video-section {
+            background: #1e293b;
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid #334155;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        #webcam, #canvas {
+            width: 100%;
+            display: block;
+            border-radius: 12px;
+        }
+        
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #00e676;
+            color: #0f172a;
+        }
+        
+        .btn-primary:hover {
+            background: #00c853;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #334155;
+            color: #f8fafc;
+        }
+        
+        .btn-secondary:hover {
+            background: #475569;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .stats-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .stat-card {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #334155;
+        }
+        
+        .stat-card h3 {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: 800;
+            color: #00e676;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #64748b;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-name {
+            font-size: 14px;
+            color: #cbd5e1;
+        }
+        
+        .stat-num {
+            font-size: 18px;
+            font-weight: 700;
+            color: #00e676;
+        }
+        
+        .stat-num.warning {
+            color: #ffb74d;
+        }
+        
+        .stat-num.danger {
+            color: #ff5252;
+        }
+        
+        .phase-indicator {
+            display: flex;
+            gap: 5px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .phase {
+            padding: 6px 12px;
+            background: #334155;
+            border-radius: 20px;
+            font-size: 11px;
+            color: #94a3b8;
+            transition: all 0.3s;
+        }
+        
+        .phase.active {
+            background: #00e676;
+            color: #0f172a;
+            font-weight: 600;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #334155;
+            border-top-color: #00e676;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #334155;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #64748b;
+        }
+        
+        .status-dot.active {
+            background: #00e676;
+            box-shadow: 0 0 10px #00e676;
+        }
+        
+        .info-box {
+            background: rgba(0, 230, 118, 0.1);
+            border: 1px solid rgba(0, 230, 118, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #a7f3d0;
+        }
+        
+        .error-box {
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid rgba(255, 82, 82, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #fca5a5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚾ PitchCraft AI 폼 분석</h1>
+        <p class="subtitle">MediaPipe Pose를 활용한 실시간 투구 폼 분석 데모</p>
+        
+        <div class="main-grid">
+            <!-- 비디오 섹션 -->
+            <div class="video-section">
+                <div class="status-badge">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">대기 중</span>
+                </div>
+                
+                <div class="video-container">
+                    <video id="webcam" playsinline></video>
+                    <canvas id="canvas"></canvas>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-primary" id="startBtn" onclick="startCamera()">
+                        📷 카메라 시작
+                    </button>
+                    <button class="btn btn-secondary" id="captureBtn" onclick="captureFrame()" disabled>
+                        📸 프레임 캡처
+                    </button>
+                    <button class="btn btn-secondary" id="stopBtn" onclick="stopCamera()" disabled>
+                        ⏹️ 중지
+                    </button>
+                </div>
+                
+                <div class="info-box">
+                    <strong>💡 사용 방법</strong><br>
+                    1. '카메라 시작' 버튼을 클릭하세요<br>
+                    2. 카메라 앞에서 투구 자세를 취하세요<br>
+                    3. 관절이 초록색 점으로 표시됩니다<br>
+                    4. 오른쪽 패널에서 실시간 측정값을 확인하세요
+                </div>
+                
+                <div id="errorBox" class="error-box" style="display: none;"></div>
+            </div>
+            
+            <!-- 통계 섹션 -->
+            <div class="stats-section">
+                <!-- 투구 단계 -->
+                <div class="stat-card">
+                    <h3>📊 현재 투구 단계</h3>
+                    <div class="stat-value" id="currentPhase">--</div>
+                    <div class="stat-label">감지된 단계</div>
+                    <div class="phase-indicator">
+                        <span class="phase" data-phase="1">Wind-up</span>
+                        <span class="phase" data-phase="2">Leg Lift</span>
+                        <span class="phase" data-phase="3">Stride</span>
+                        <span class="phase" data-phase="4">Arm Cock</span>
+                        <span class="phase" data-phase="5">Release</span>
+                        <span class="phase" data-phase="6">Follow</span>
+                    </div>
+                </div>
+                
+                <!-- 측정값 -->
+                <div class="stat-card">
+                    <h3>📐 실시간 측정</h3>
+                    <div class="stat-row">
+                        <span class="stat-name">팔꿈치 각도</span>
+                        <span class="stat-num" id="elbowAngle">--°</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-name">어깨 각도</span>
+                        <span class="stat-num" id="shoulderAngle">--°</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-name">무릎 각도</span>
+                        <span class="stat-num" id="kneeAngle">--°</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-name">몸통 기울기</span>
+                        <span class="stat-num" id="torsoTilt">--°</span>
+                    </div>
+                </div>
+                
+                <!-- 관절 감지 상태 -->
+                <div class="stat-card">
+                    <h3>🦴 관절 감지 상태</h3>
+                    <div class="stat-row">
+                        <span class="stat-name">감지된 관절</span>
+                        <span class="stat-num" id="detectedJoints">0/33</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-name">신뢰도</span>
+                        <span class="stat-num" id="confidence">--%</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-name">FPS</span>
+                        <span class="stat-num" id="fps">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MediaPipe Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+
+    <script>
+        // DOM Elements
+        const videoElement = document.getElementById('webcam');
+        const canvasElement = document.getElementById('canvas');
+        const canvasCtx = canvasElement.getContext('2d');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const startBtn = document.getElementById('startBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const errorBox = document.getElementById('errorBox');
+        
+        // State
+        let pose = null;
+        let camera = null;
+        let isRunning = false;
+        let frameCount = 0;
+        let lastTime = performance.now();
+        
+        // MediaPipe Pose 랜드마크 인덱스
+        const LANDMARKS = {
+            NOSE: 0,
+            LEFT_SHOULDER: 11,
+            RIGHT_SHOULDER: 12,
+            LEFT_ELBOW: 13,
+            RIGHT_ELBOW: 14,
+            LEFT_WRIST: 15,
+            RIGHT_WRIST: 16,
+            LEFT_HIP: 23,
+            RIGHT_HIP: 24,
+            LEFT_KNEE: 25,
+            RIGHT_KNEE: 26,
+            LEFT_ANKLE: 27,
+            RIGHT_ANKLE: 28
+        };
+        
+        // 각도 계산 함수
+        function calculateAngle(a, b, c) {
+            const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+            let angle = Math.abs(radians * 180.0 / Math.PI);
+            if (angle > 180.0) {
+                angle = 360 - angle;
+            }
+            return Math.round(angle);
+        }
+        
+        // 투구 단계 감지
+        function detectPhase(landmarks) {
+            if (!landmarks || landmarks.length < 33) return '--';
+            
+            const rightWrist = landmarks[LANDMARKS.RIGHT_WRIST];
+            const rightShoulder = landmarks[LANDMARKS.RIGHT_SHOULDER];
+            const rightHip = landmarks[LANDMARKS.RIGHT_HIP];
+            const leftKnee = landmarks[LANDMARKS.LEFT_KNEE];
+            const leftAnkle = landmarks[LANDMARKS.LEFT_ANKLE];
+            const rightAnkle = landmarks[LANDMARKS.RIGHT_ANKLE];
+            
+            // 간단한 휴리스틱으로 단계 감지
+            const kneeHeight = rightHip.y - leftKnee.y;
+            const wristHeight = rightShoulder.y - rightWrist.y;
+            const stanceWidth = Math.abs(leftAnkle.x - rightAnkle.x);
+            
+            // 단계 판별
+            if (kneeHeight > 0.15) {
+                updatePhaseIndicator(2);
+                return 'Leg Lift';
+            } else if (stanceWidth > 0.3) {
+                updatePhaseIndicator(3);
+                return 'Stride';
+            } else if (wristHeight > 0.2) {
+                updatePhaseIndicator(4);
+                return 'Arm Cock';
+            } else if (wristHeight < -0.1) {
+                updatePhaseIndicator(5);
+                return 'Release';
+            } else {
+                updatePhaseIndicator(1);
+                return 'Wind-up';
+            }
+        }
+        
+        function updatePhaseIndicator(activePhase) {
+            document.querySelectorAll('.phase').forEach(el => {
+                el.classList.remove('active');
+                if (parseInt(el.dataset.phase) === activePhase) {
+                    el.classList.add('active');
+                }
+            });
+        }
+        
+        // 측정값 업데이트
+        function updateMeasurements(landmarks) {
+            if (!landmarks || landmarks.length < 33) return;
+            
+            // 팔꿈치 각도 (오른팔)
+            const elbowAngle = calculateAngle(
+                landmarks[LANDMARKS.RIGHT_SHOULDER],
+                landmarks[LANDMARKS.RIGHT_ELBOW],
+                landmarks[LANDMARKS.RIGHT_WRIST]
+            );
+            const elbowEl = document.getElementById('elbowAngle');
+            elbowEl.textContent = `${elbowAngle}°`;
+            elbowEl.className = 'stat-num' + (elbowAngle < 70 ? ' danger' : elbowAngle < 85 ? ' warning' : '');
+            
+            // 어깨 각도
+            const shoulderAngle = calculateAngle(
+                landmarks[LANDMARKS.RIGHT_HIP],
+                landmarks[LANDMARKS.RIGHT_SHOULDER],
+                landmarks[LANDMARKS.RIGHT_ELBOW]
+            );
+            document.getElementById('shoulderAngle').textContent = `${shoulderAngle}°`;
+            
+            // 무릎 각도 (왼쪽 - 앞발)
+            const kneeAngle = calculateAngle(
+                landmarks[LANDMARKS.LEFT_HIP],
+                landmarks[LANDMARKS.LEFT_KNEE],
+                landmarks[LANDMARKS.LEFT_ANKLE]
+            );
+            document.getElementById('kneeAngle').textContent = `${kneeAngle}°`;
+            
+            // 몸통 기울기
+            const leftShoulder = landmarks[LANDMARKS.LEFT_SHOULDER];
+            const rightShoulder = landmarks[LANDMARKS.RIGHT_SHOULDER];
+            const torsoTilt = Math.round(
+                Math.atan2(rightShoulder.y - leftShoulder.y, rightShoulder.x - leftShoulder.x) * 180 / Math.PI
+            );
+            document.getElementById('torsoTilt').textContent = `${Math.abs(torsoTilt)}°`;
+            
+            // 투구 단계
+            document.getElementById('currentPhase').textContent = detectPhase(landmarks);
+        }
+        
+        // 관절 감지 상태 업데이트
+        function updateJointStatus(landmarks) {
+            if (!landmarks) {
+                document.getElementById('detectedJoints').textContent = '0/33';
+                document.getElementById('confidence').textContent = '--%';
+                return;
+            }
+            
+            const detected = landmarks.filter(l => l.visibility > 0.5).length;
+            document.getElementById('detectedJoints').textContent = `${detected}/33`;
+            
+            const avgConfidence = landmarks.reduce((sum, l) => sum + l.visibility, 0) / landmarks.length;
+            document.getElementById('confidence').textContent = `${Math.round(avgConfidence * 100)}%`;
+        }
+        
+        // FPS 계산
+        function updateFPS() {
+            frameCount++;
+            const now = performance.now();
+            if (now - lastTime >= 1000) {
+                document.getElementById('fps').textContent = frameCount;
+                frameCount = 0;
+                lastTime = now;
+            }
+        }
+        
+        // MediaPipe 결과 처리
+        function onResults(results) {
+            if (!isRunning) return;
+            
+            updateFPS();
+            
+            // 캔버스 크기 설정
+            canvasElement.width = videoElement.videoWidth;
+            canvasElement.height = videoElement.videoHeight;
+            
+            // 비디오 프레임 그리기
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            
+            // 반투명 오버레이
+            canvasCtx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+            
+            if (results.poseLandmarks) {
+                // 연결선 그리기
+                drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {
+                    color: '#00e676',
+                    lineWidth: 3
+                });
+                
+                // 관절점 그리기
+                drawLandmarks(canvasCtx, results.poseLandmarks, {
+                    color: '#ffffff',
+                    fillColor: '#00e676',
+                    lineWidth: 2,
+                    radius: 5
+                });
+                
+                // 측정값 업데이트
+                updateMeasurements(results.poseLandmarks);
+                updateJointStatus(results.poseLandmarks);
+            } else {
+                updateJointStatus(null);
+            }
+            
+            canvasCtx.restore();
+        }
+        
+        // 카메라 시작
+        async function startCamera() {
+            try {
+                showError(null);
+                statusText.textContent = '초기화 중...';
+                startBtn.disabled = true;
+                
+                // MediaPipe Pose 초기화
+                pose = new Pose({
+                    locateFile: (file) => {
+                        return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+                    }
+                });
+                
+                pose.setOptions({
+                    modelComplexity: 1,
+                    smoothLandmarks: true,
+                    enableSegmentation: false,
+                    smoothSegmentation: false,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+                
+                pose.onResults(onResults);
+                
+                // 카메라 스트림 가져오기
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    }
+                });
+                
+                videoElement.srcObject = stream;
+                await videoElement.play();
+                
+                // 캔버스 크기 설정
+                canvasElement.width = videoElement.videoWidth;
+                canvasElement.height = videoElement.videoHeight;
+                
+                // 프레임 처리 시작
+                isRunning = true;
+                processFrame();
+                
+                // UI 업데이트
+                statusDot.classList.add('active');
+                statusText.textContent = '분석 중';
+                startBtn.disabled = true;
+                captureBtn.disabled = false;
+                stopBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('카메라 시작 오류:', error);
+                showError('카메라를 시작할 수 없습니다: ' + error.message);
+                startBtn.disabled = false;
+            }
+        }
+        
+        // 프레임 처리
+        async function processFrame() {
+            if (!isRunning) return;
+            
+            if (videoElement.readyState >= 2) {
+                await pose.send({ image: videoElement });
+            }
+            
+            requestAnimationFrame(processFrame);
+        }
+        
+        // 카메라 중지
+        function stopCamera() {
+            isRunning = false;
+            
+            if (videoElement.srcObject) {
+                videoElement.srcObject.getTracks().forEach(track => track.stop());
+                videoElement.srcObject = null;
+            }
+            
+            // UI 업데이트
+            statusDot.classList.remove('active');
+            statusText.textContent = '중지됨';
+            startBtn.disabled = false;
+            captureBtn.disabled = true;
+            stopBtn.disabled = true;
+            
+            // 캔버스 클리어
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        }
+        
+        // 프레임 캡처
+        function captureFrame() {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvasElement.width;
+            tempCanvas.height = canvasElement.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // 비디오 + 오버레이 합성
+            tempCtx.drawImage(videoElement, 0, 0);
+            tempCtx.drawImage(canvasElement, 0, 0);
+            
+            // 다운로드
+            const link = document.createElement('a');
+            link.download = `pitchcraft_capture_${Date.now()}.png`;
+            link.href = tempCanvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // 에러 표시
+        function showError(message) {
+            if (message) {
+                errorBox.textContent = message;
+                errorBox.style.display = 'block';
+            } else {
+                errorBox.style.display = 'none';
+            }
+        }
+        
+        // 페이지 언로드 시 정리
+        window.addEventListener('beforeunload', stopCamera);
+    </script>
+</body>
+</html>

@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pitch Craft - 야구 통합 커뮤니티</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Include a nice font -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <!-- Header -->
+    <header style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <div onclick="selectTeam()" style="cursor: pointer; font-size: 20px;">🛡️</div>
+        <h1>⚾ Pitch Craft</h1>
+        <div style="font-size:11px; color:#aaa; margin-top:2px;">Beta v0.9</div>
+    </header>
+
+    <!-- TAB 0: HOME (Premium Hero) -->
+    <div id="home-view" class="tab-content" style="padding-bottom: 90px;">
+        <!-- Hero Section -->
+        <div class="hero-section" style="
+            position: relative;
+            height: 65vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 30px;
+            background: radial-gradient(circle at 100% 0%, rgba(0, 230, 118, 0.15) 0%, transparent 60%);
+        ">
+            <h2
+                style="font-size: 28px; font-weight: 800; line-height: 1.4; color: var(--text-main); margin-bottom: 12px; animation: slideIn 0.6s ease-out;">
+                오늘의 투구 폼,<br>
+                <span style="color: var(--primary-color);">얼마나 개선되었나요?</span>
+            </h2>
+            <p style="font-size: 15px; color: var(--text-sub); margin-bottom: 40px; animation: slideIn 0.8s ease-out;">
+                나와 폼이 비슷한 선수를 확인해보세요.
+            </p>
+
+            <button class="interactive" onclick="switchTab('my', document.querySelectorAll('.nav-item')[3])" style="
+                background: var(--primary-color);
+                color: #000;
+                border: none;
+                width: 220px;
+                height: 56px;
+                border-radius: 50px;
+                font-size: 16px;
+                font-weight: 800;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(0, 230, 118, 0.4);
+                align-self: center;
+                animation: pulse-green 2s infinite;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            ">
+                AI 분석 시작하기 ⚡
+            </button>
+        </div>
+
+        <!-- Utility Grid -->
+        <div class="utility-grid" style="
+            padding: 0 20px 20px 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: -20px;
+        ">
+            <!-- Locker Card -->
+            <div class="card interactive" onclick="switchTab('market', document.querySelectorAll('.nav-item')[1])"
+                style="
+                background: var(--surface-color);
+                padding: 20px;
+                height: 140px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                border: 1px solid rgba(255,255,255,0.05);
+            ">
+                <span style="font-size: 32px;">🛍️</span>
+                <span style="font-size: 16px; font-weight: 700; color: var(--text-main);">중고 장비<br>찾기</span>
+            </div>
+
+            <!-- Community Card -->
+            <div class="card interactive" onclick="switchTab('community', document.querySelectorAll('.nav-item')[2])"
+                style="
+                background: var(--surface-color);
+                padding: 20px;
+                height: 140px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                border: 1px solid rgba(255,255,255,0.05);
+            ">
+                <span style="font-size: 32px;">📣</span>
+                <span style="font-size: 16px; font-weight: 700; color: var(--text-main);">용병<br>수다방</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 1: LOCKER (Market & Info) -->
+    <div id="market-view" class="tab-content active">
+
+        <!-- AI Promotion Banner (Priority CSS) -->
+        <div
+            style="padding: 20px; background: linear-gradient(135deg, #000000 0%, #2c3e50 100%); color: white; border-radius: 0 0 20px 20px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative; overflow: hidden;">
+            <div
+                style="position: absolute; top: -10px; right: -10px; font-size: 80px; opacity: 0.1; transform: rotate(15deg);">
+                🤖</div>
+            <div style="position: relative; z-index: 2;">
+                <span
+                    style="background: var(--primary-color); color:black; font-weight:bold; font-size:10px; padding:3px 8px; border-radius:10px;">NEW</span>
+                <h2 style="margin: 10px 0 5px 0; font-size: 22px; color: #00FF88; font-style: italic;">AI Pitch
+                    Analysis
+                </h2>
+                <p style="font-size: 13px; color: #ccc; margin-bottom: 15px;">"내 투구폼, 프로랑 얼마나 비슷할까?"<br>3초 만에 분석하고
+                    교정
+                    받으세요!</p>
+                <button onclick="openAiActionSheet()"
+                    style="background: white; color: black; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 2px 10px rgba(255,255,255,0.2);">
+                    👉 지금 무료로 분석하기
+                </button>
+            </div>
+        </div>
+
+        <!-- Price Comparison (Platform Feature) -->
+        <div class="section-container" style="background: transparent; margin-bottom: 10px; padding-bottom: 5px;">
+            <div
+                style="padding: 15px 20px 5px 20px; display:flex; justify-content:space-between; align-items:flex-end;">
+                <div>
+                    <h3 style="margin:0; font-size:18px; color:var(--text-color);">🔥 최저가 핫딜</h3>
+                    <p style="margin:4px 0 0 0; font-size:12px; color:#888;">주요 쇼핑몰 가격비교</p>
+                </div>
+                <span style="font-size:12px; color:var(--primary-color); font-weight:bold;">더보기 &gt;</span>
+            </div>
+            <div class="scroll-container" id="priceCompareList">
+                <!-- JS Populated -->
+            </div>
+        </div>
+
+        <div class="search-wrapper">
+
+            <input type="text" class="search-box" id="searchInput" placeholder="🔍 원하는 장비를 검색해보세요"
+                oninput="searchProducts()">
+        </div>
+        <div class="filter-container">
+            <button class="filter-btn active" onclick="filterData('all', this)">전체</button>
+            <button class="filter-btn" onclick="filterData('투수', this)">투수</button>
+            <button class="filter-btn" onclick="filterData('내야수', this)">내야수</button>
+            <button class="filter-btn" onclick="filterData('포수', this)">포수</button>
+            <button class="filter-btn" onclick="filterData('배트', this)">배트</button>
+            <button class="filter-btn" onclick="filterData('신발', this)">신발</button>
+            <button class="filter-btn hand-btn" onclick="filterData('좌투', this)">좌투</button>
+            <button class="filter-btn hand-btn" onclick="filterData('우투', this)">우투</button>
+        </div>
+        <div class="product-list" id="productList">
+            <!-- JS will populate -->
+        </div>
+    </div>
+
+    <!-- TAB 2: GROUND (Community/Lounge) -->
+    <div id="community-view" class="tab-content">
+        <div class="community-list">
+
+            <!-- Live Cheers -->
+            <div style="margin-bottom: 20px;">
+                <h3 style="margin-bottom: 10px; font-size: 16px; color: var(--text-main);">🔥 실시간 응원</h3>
+                <div class="live-cheers">
+                    <button class="cheer-btn" onclick="addCheer(this)">⚾ 야구 (1,234)</button>
+                    <button class="cheer-btn" onclick="addCheer(this)">🐯 기아 (890)</button>
+                    <button class="cheer-btn" onclick="addCheer(this)">🦁 삼성 (750)</button>
+                    <button class="cheer-btn" onclick="addCheer(this)">🦅 한화 (1,500)</button>
+                    <button class="cheer-btn" onclick="addCheer(this)">🐻 두산 (620)</button>
+                </div>
+            </div>
+
+            <!-- Anonymous Q&A (DC Inside Pain Point) -->
+            <div class="post-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span class="post-tag tag-qna">👻 익명 Q&A</span>
+                    <span style="font-size:12px; color:#888;">더보기 &gt;</span>
+                </div>
+                <h3 class="post-title" style="font-size: 16px;">"핑프라고 욕먹을까봐..."<br>눈치보지 말고 물어보세요!</h3>
+                <div class="qa-list" id="qaList">
+                    <!-- JS populate -->
+                </div>
+            </div>
+
+            <!-- Daily Topic Section -->
+            <div style="margin: 20px 0;">
+                <h3 style="margin-bottom: 10px; font-size: 16px; color: var(--text-main);">📢 오늘의 토픽</h3>
+                <div class="post-card"
+                    style="background: rgba(33, 150, 243, 0.1); border-color: rgba(33, 150, 243, 0.3);">
+                    <span class="post-tag tag-topic">💬 토론</span>
+                    <h3 class="post-title" style="font-size: 16px; color: var(--text-main);">"야구는 투수놀음이다?" vs "결국엔
+                        타격이다?"</h3>
+                    <p class="post-info" style="margin-bottom: 15px; color: var(--text-sub);">여러분의 생각은 어떠신가요? 댓글로 의견을
+                        남겨주세요!</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="action-btn"
+                            style="background: rgba(255, 255, 255, 0.05); flex: 1; padding: 12px; font-size:14px; color:#64B5F6;">투수
+                            (52%)</button>
+                        <button class="action-btn"
+                            style="background: rgba(255, 255, 255, 0.05); flex: 1; padding: 12px; font-size:14px; color:#E57373;">타자
+                            (48%)</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="action-btn create-card-btn" onclick="openCardMaker()">
+                <span style="font-size: 20px;">⚡</span> 황금 용병 카드 만들기
+            </button>
+
+            <!-- Posts -->
+            <div class="post-card">
+                <span class="post-tag tag-merc">🔥 용병 모집</span>
+                <h3 class="post-title">12/7(토) 15시 사직구장 / 투수 급구</h3>
+                <div class="post-info">
+                    📍 부산 사직동 | 💰 무료<br>
+                    즐겁게 게임하실 분 찾습니다. 장비 대여 가능!
+                </div>
+                <button class="action-btn btn-primary" onclick="openWaitlist('용병 신청')">참가 신청</button>
+            </div>
+
+            <div class="post-card">
+                <span class="post-tag tag-meetup">👋 번개 모임</span>
+                <h3 class="post-title">일요일 오전 캐치볼 & 커피 ☕</h3>
+                <div class="post-info">
+                    📍 부산대 운동장 | ⏰ 10:00 AM<br>
+                    글러브만 들고 오세요. 초보자 환영합니다.
+                </div>
+                <button class="action-btn" style="background: rgba(255, 255, 255, 0.05); color: var(--text-main);"
+                    onclick="openWaitlist('번개 참가')">참가하기</button>
+            </div>
+
+            <!-- News Feed -->
+            <div class="news-feed">
+                <h3 style="margin-bottom: 15px; font-size: 16px; color: var(--text-main);">📰 실시간 야구 뉴스</h3>
+
+                <div class="news-item">
+                    <img src="https://images.unsplash.com/photo-1593786481097-cf281dd12e9e?w=200&q=80"
+                        class="news-thumb">
+                    <div class="news-info">
+                        <div class="news-title">KBO FA 시장 과열, 거품 논란 점화되나?</div>
+                        <div class="news-meta">스포츠서울 • 10분 전</div>
+                    </div>
+                </div>
+
+                <div class="news-item">
+                    <img src="https://images.unsplash.com/photo-1546255799-270836c28f09?w=200&q=80" class="news-thumb">
+                    <div class="news-info">
+                        <div class="news-title">류현진 복귀 첫 등판, 5이닝 무실점 호투</div>
+                        <div class="news-meta">OSEN • 1시간 전</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- TAB 3: MY CRAFT (Profile) -->
+    <div id="my-view" class="tab-content">
+        <div class="profile-section">
+            <div class="profile-img">⚾</div>
+            <h2 class="profile-name">정현</h2>
+            <p class="profile-sub">부산 샌드랏 리그 • 투수 • <span style="color: #f59e0b; font-weight: bold;">골드 등급</span>
+            </p>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value">3.45</div>
+                    <div class="stat-label">ERA</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">42</div>
+                    <div class="stat-label">삼진</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="maxSpeedDisplay">128</div>
+                    <div class="stat-label">최고구속</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="chart-title">📈 직구 구속 성장 기록</div>
+                <div class="add-record">
+                    <input type="number" id="speedInput" placeholder="km/h" min="70" max="170">
+                    <button onclick="addRecord()">추가</button>
+                </div>
+            </div>
+            <div class="bar-chart" id="growthChart"></div>
+        </div>
+
+        <div style="padding: 0 20px;">
+            <button class="action-btn"
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 5px 20px rgba(118, 75, 162, 0.4);"
+                onclick="openAiActionSheet()">
+                🤖 AI 투구폼 분석하기
+            </button>
+        </div>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Product Detail Modal -->
+    <div class="modal" id="productModal" onclick="closeModal(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="modalTitle">상품명</span>
+                <button class="close-btn" onclick="closeProductModal()">&times;</button>
+            </div>
+            <img class="modal-img" id="modalImg" src="" alt="">
+            <div class="modal-price" id="modalPrice">가격</div>
+            <p class="modal-desc" id="modalDesc">설명</p>
+
+            <div class="seller-info">
+                <div class="seller-avatar">🧑</div>
+                <div class="seller-details">
+                    <div class="seller-name">판매자 정현</div>
+                    <div class="seller-rating">⭐ 매너온도 99.9°C</div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-chat" onclick="openChat()">💬 채팅하기</button>
+                <button class="btn btn-buy" onclick="openWaitlist('안전결제')">💳 안전결제</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Modal -->
+    <div class="chat-modal" id="chatScreen">
+        <div
+            style="display:flex; flex-direction:column; height:100%; max-width: 600px; margin: 0 auto; background: #fff;">
+            <div class="modal-header" style="padding: 15px; border-bottom: 1px solid #eee; margin-bottom: 0;">
+                <button class="close-btn" onclick="closeChat()">&larr;</button>
+                <span class="modal-title" style="font-size: 16px;">정현님과 대화</span>
+                <span style="width:24px;"></span>
+            </div>
+            <div id="chatBody"
+                style="flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; background: #f8f9fa;">
+                <div class="chat-msg msg-recv"
+                    style="background: white; padding: 12px; border-radius: 12px; align-self: flex-start; border: 1px solid #eee; max-width: 70%;">
+                    안녕하세요! 상품 아직 있나요?</div>
+            </div>
+            <div style="padding:15px; border-top:1px solid #eee; background: white; display:flex; gap:10px;">
+                <input type="text" id="chatInput" placeholder="메시지 입력..."
+                    style="flex:1; padding:12px; border:1px solid #ddd; border-radius: 20px; outline:none;"
+                    onkeypress="if(event.key==='Enter')sendMessage()">
+                <button onclick="sendMessage()"
+                    style="border:none; background: var(--primary-color); color:white; width: 40px; height: 40px; border-radius: 50%; display:flex; align-items:center; justify-content:center;">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Waitlist Modal -->
+    <div class="waitlist-modal" id="waitlistModal" onclick="closeModal(event)">
+        <div class="modal-content"
+            style="border-radius: 20px; max-width: 360px; margin: auto; max-height: auto; width: 90%;">
+            <div style="text-align: center; padding: 20px 0;">
+                <div style="font-size: 50px; margin-bottom: 15px;">🚀</div>
+                <h2 style="margin: 0 0 10px 0;">Coming Soon!</h2>
+                <p style="color: #666; font-size: 15px; margin-bottom: 25px;">
+                    이 기능은 현재 개발 중입니다.<br>
+                    사전 예약하고 <strong style="color:var(--primary-color)">평생 무료 혜택</strong>을 받으세요!
+                </p>
+                <button class="action-btn btn-primary" onclick="submitWaitlist()">사전예약 바로가기</button>
+            </div>
+            <button class="close-btn" style="position: absolute; top: 15px; right: 15px;"
+                onclick="closeWaitlist()">&times;</button>
+        </div>
+    </div>
+
+    <!-- Card Maker Modal -->
+    <div class="card-maker-modal" id="cardMakerModal" onclick="closeModal(event)">
+        <div class="card-maker-content">
+            <div class="modal-header">
+                <span class="modal-title" style="color:#d4af37;">⚡ 황금 용병 카드</span>
+                <button class="close-btn"
+                    onclick="document.getElementById('cardMakerModal').style.display='none'">&times;</button>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <div class="profile-img" style="width: 80px; height: 80px; cursor: pointer; border: 2px dashed #ccc;"
+                    onclick="document.getElementById('mercPhoto').click()">
+                    <div id="photoPreview" style="display:flex; flex-direction:column; align-items:center;">
+                        <span style="font-size: 24px;">📷</span>
+                        <div style="font-size: 11px; color:#999; margin-top:5px;">사진 추가</div>
+                    </div>
+                </div>
+                <input type="file" id="mercPhoto" style="display: none;" accept="image/*" onchange="previewPhoto(this)">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <input type="text" id="mercName" placeholder="닉네임 (예: 번개손)" class="search-box">
+                <select id="mercPos" class="search-box">
+                    <option value="">포지션</option>
+                    <option value="투수">투수 (P)</option>
+                    <option value="포수">포수 (C)</option>
+                    <option value="내야수">내야수 (IF)</option>
+                    <option value="외야수">외야수 (OF)</option>
+                </select>
+                <!-- Hidden inputs for simplification or add them if user wants detail -->
+                <input type="hidden" id="mercLoc" value="서울">
+                <input type="hidden" id="mercSkill" value="">
+                <input type="hidden" id="mercPower">
+                <input type="hidden" id="mercSpeed">
+                <input type="hidden" id="mercControl">
+                <input type="hidden" id="mercDefense">
+            </div>
+
+            <button class="action-btn"
+                style="background: linear-gradient(135deg, #FFD700, #FFA000); color:black; margin-bottom: 20px;"
+                onclick="generateFifaCard()">
+                카드 생성하기
+            </button>
+
+            <!-- Preview -->
+            <div class="fifa-card" id="fifaCardPreview">
+                <div class="fifa-card-inner">
+                    <div class="fifa-top">
+                        <div style="text-align: center;">
+                            <div class="fifa-rating" id="previewRating">99</div>
+                            <div class="fifa-position" id="previewPosition">P</div>
+                        </div>
+                        <div style="font-size: 30px;">🇰🇷</div>
+                    </div>
+                    <div class="fifa-profile" id="fifaProfile">⚾</div>
+                    <div class="fifa-name" id="previewPlayerName">PLAYER</div>
+                    <div class="fifa-stats" id="previewStats">
+                        <!-- Stats injected here -->
+                    </div>
+                    <div
+                        style="text-align: center; margin-top: auto; font-size: 12px; font-weight: bold; opacity: 0.5;">
+                        PITCH CRAFT</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Result Modal -->
+    <div class="ai-result-modal" id="aiResultModal" onclick="closeModal(event)">
+        <div class="modal-content"
+            style="border-radius: 20px; max-width: 360px; margin: auto; width: 90%; background: #222; color: white;">
+            <div class="modal-header">
+                <span class="modal-title" style="color: #00FF88;">🤖 AI 분석 결과</span>
+                <button class="close-btn" style="color:white;" onclick="closeAiResult()">&times;</button>
+            </div>
+
+            <!-- Pitching Form Visual (Static for MVP) -->
+            <div style="background: #333; height: 200px; border-radius: 12px; margin-bottom: 20px; position: relative;">
+                <!-- Simple Skeleton Visual -->
+                <div
+                    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 2px; height: 100px; background: #00FF88;">
+                </div>
+                <div
+                    style="position: absolute; top: 30%; left: 50%; transform: translateX(-50%); width: 60px; height: 2px; background: #00FF88;">
+                </div>
+                <div
+                    style="position: absolute; top: 20%; left: 50%; transform: translateX(-50%); width: 20px; height: 20px; border: 2px solid #00FF88; border-radius: 50%;">
+                </div>
+                <div
+                    style="position: absolute; bottom: 10px; right: 10px; background: #00FF88; color: black; font-size: 10px; padding: 4px; border-radius: 4px; font-weight: bold;">
+                    릴리스 포인트 양호</div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span style="font-size: 14px; color: #ccc;">종합 점수</span>
+                    <span style="font-size: 24px; font-weight: bold; color: #00FF88;">82점</span>
+                </div>
+                <div style="height: 6px; background: #444; border-radius: 3px; overflow: hidden;">
+                    <div style="width: 82%; height: 100%; background: #00FF88;"></div>
+                </div>
+            </div>
+
+            <div
+                style="background: rgba(0,255,136,0.1); padding: 15px; border-radius: 12px; font-size: 13px; line-height: 1.5; color: #ddd; margin-bottom: 20px;">
+                <strong style="color: #00FF88;">코치 노트:</strong><br>
+                하체 중심 이동이 아주 좋습니다. 다만 릴리스 시 팔꿈치 각도가 조금 낮아요. 이 부분만 교정하면 구속이 <strong>3km/h</strong> 더 증가할 수 있습니다!
+            </div>
+
+            <button class="action-btn btn-primary" onclick="submitWaitlist()">상세 분석 리포트 받기</button>
+        </div>
+    </div>
+
+    <!-- AI Loader -->
+    <!-- AI Action Sheet -->
+    <div class="sheet-overlay" id="sheetOverlay" onclick="closeAiActionSheet()"></div>
+    <div class="action-sheet" id="aiActionSheet">
+        <h3 style="margin: 0 0 20px 0; font-size: 18px; text-align: center;">어떻게 분석할까요?</h3>
+
+        <button class="sheet-btn" onclick="triggerAiProcess('camera')">
+            <span style="font-size: 20px;">📸</span> 카메라로 촬영하기
+        </button>
+        <button class="sheet-btn" onclick="triggerAiProcess('upload')">
+            <span style="font-size: 20px;">📁</span> 갤러리에서 영상 가져오기
+        </button>
+        <button class="sheet-btn" style="background:white; color:#FF5252; border-color:white;"
+            onclick="closeAiActionSheet()">
+            취소
+        </button>
+
+        <input type="file" id="videoInput" accept="video/*" style="display:none;" onchange="handleFileSelect(this)">
+        <input type="file" id="cameraInput" accept="video/*" capture="environment" style="display:none;"
+            onchange="handleFileSelect(this)">
+    </div>
+
+    <!-- AI Loader -->
+    <div class="ai-loader" id="ai-loader" style="display: none;">
+        <div style="font-size: 60px; margin-bottom: 20px;">🤖</div>
+        <div class="loader-bar">
+            <div class="loader-fill" id="loader-fill"></div>
+        </div>
+        <div class="loader-text" id="loader-text">AI 분석 중...</div>
+    </div>
+
+    <!-- Floating Q&A Button (Visible in Community) -->
+    <div class="qna-fab" id="qnaFab" onclick="alert('익명 질문 작성 모달 (준비중)')">✏️</div>
+
+    <nav>
+        <div class="nav-item" onclick="switchTab('home', this)">
+            <span class="nav-icon">🏠</span>Home
+        </div>
+        <div class="nav-item" onclick="switchTab('market', this)">
+            <span class="nav-icon">🛒</span>Locker
+        </div>
+        <div class="nav-item" onclick="switchTab('community', this)">
+            <span class="nav-icon">📣</span>Community
+        </div>
+        <div class="nav-item" onclick="switchTab('my', this)">
+            <span class="nav-icon">📊</span>My Craft
+        </div>
+    </nav>
+
+    <script src="data.js"></script>
+    <script src="api.js"></script>
+    <script src="script.js"></script>
+
+    <!-- 서버 연결 상태 표시 -->
+    <div id="serverStatus" style="
+        position: fixed;
+        top: 60px;
+        right: 10px;
+        background: rgba(0,0,0,0.8);
+        color: #888;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    ">
+        <span id="statusDot" style="width: 8px; height: 8px; border-radius: 50%; background: #888;"></span>
+        <span id="statusText">서버 연결 중...</span>
+    </div>
+
+    <script>
+        // 서버 상태 확인 및 UI 업데이트
+        async function updateServerStatus() {
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+
+            try {
+                const response = await fetch('https://pitchcraft-backend-mll9.onrender.com/health');
+                const data = await response.json();
+
+                if (data.status === 'healthy') {
+                    dot.style.background = '#00E676';
+                    text.innerText = '서버 연결됨';
+                    text.style.color = '#00E676';
+
+                    // 3초 후 숨김
+                    setTimeout(() => {
+                        document.getElementById('serverStatus').style.opacity = '0.3';
+                    }, 3000);
+                }
+            } catch (error) {
+                dot.style.background = '#FFA726';
+                text.innerText = '서버 깨우는 중...';
+                text.style.color = '#FFA726';
+
+                // 재시도
+                setTimeout(updateServerStatus, 5000);
+            }
+        }
+
+        // 페이지 로드 시 서버 상태 확인
+        document.addEventListener('DOMContentLoaded', updateServerStatus);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PitchCraft AI Motion Engine - Tech Demo</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --panel-bg: #1e293b;
+            --primary: #00e676;
+            --danger: #ff5252;
+            --warning: #ffb74d;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #00e676, #2979ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .subtitle {
+            color: var(--text-sub);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .main-container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+            flex-wrap: wrap;
+        }
+
+        .canvas-container {
+            flex: 2;
+            min-width: 300px;
+            background: #000;
+            border-radius: 20px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid #334155;
+            overflow: hidden;
+            aspect-ratio: 3/4;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .overlay-ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .badge {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .controls-panel {
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .control-card {
+            background: var(--panel-bg);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #334155;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .toggle-row:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .toggle-row.active {
+            border: 1px solid var(--primary);
+            background: rgba(0, 230, 118, 0.1);
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #475569;
+            transition: 0.3s;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .active .status-dot {
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .risk-meter-container {
+            margin-top: 10px;
+        }
+
+        .meter-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-bottom: 5px;
+        }
+
+        .meter-bar {
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .meter-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00e676, #ffb74d, #ff5252);
+            transition: width 0.5s ease-out;
+        }
+
+        .data-display {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--primary);
+            line-height: 1.5;
+            margin-top: 10px;
+        }
+
+        /* Animation Keyframes */
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 82, 82, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 82, 82, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 82, 82, 0);
+            }
+        }
+
+        ``` --bg-dark: #0f172a;
+        --panel-bg: #1e293b;
+        --primary: #00e676;
+        --danger: #ff5252;
+        --warning: #ffb74d;
+        --text-main: #f8fafc;
+        --text-sub: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #00e676, #2979ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .subtitle {
+            color: var(--text-sub);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .main-container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+            flex-wrap: wrap;
+        }
+
+        .canvas-container {
+            flex: 2;
+            min-width: 300px;
+            background: #000;
+            border-radius: 20px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid #334155;
+            overflow: hidden;
+            aspect-ratio: 3/4;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .overlay-ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .badge {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .controls-panel {
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .control-card {
+            background: var(--panel-bg);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #334155;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .toggle-row:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .toggle-row.active {
+            border: 1px solid var(--primary);
+            background: rgba(0, 230, 118, 0.1);
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #475569;
+            transition: 0.3s;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .active .status-dot {
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .risk-meter-container {
+            margin-top: 10px;
+        }
+
+        .meter-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-bottom: 5px;
+        }
+
+        .meter-bar {
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .meter-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00e676, #ffb74d, #ff5252);
+            transition: width 0.5s ease-out;
+        }
+
+        .data-display {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--primary);
+            line-height: 1.5;
+            margin-top: 10px;
+        }
+
+        /* Animation Keyframes */
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 82, 82, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 82, 82, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 82, 82, 0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>PitchCraft AI Motion Engine v2.0</h1>
+    <div class="subtitle">Adaptive Real-time Coaching System</div>
+
+    <div class="main-container">
+        <!-- Interactive Canvas Area -->
+        <div class="canvas-container" id="canvasWrap">
+
+            <!-- Video/Camera Layout -->
+            <div class="camera-lens">
+                <div class="rec-indicator" id="recDot">● REC</div>
+                <div class="instruction-overlay" id="instructionText">카메라를 보고 투구 자세를 취해주세요.</div>
+            </div>
+
+            <!-- Analysis Layer -->
+            <canvas id="mainCanvas"></canvas>
+
+            <div class="overlay-ui">
+                <div class="badge">AI: Active (Edge Mode)</div>
+                <div class="badge" style="background: rgba(0,0,0,0.8); color: #4fc3f7;" id="phaseBadge">Phase: Ready
+                </div>
+            </div>
+
+            <!-- Result Overlay (Hidden Default) -->
+            <div class="result-overlay" id="resultPanel">
+                <div class="result-header">
+                    <span id="resultTitle">Analysis Complete</span>
+                    <button class="close-btn" onclick="hideResult()">×</button>
+                </div>
+                <div class="result-content" id="resultBody">
+                    <!-- Dynamic Content Here -->
+                </div>
+                <button class="action-btn" onclick="hideResult()">다시 던지기 (Re-throw)</button>
+            </div>
+        </div>
+
+        <!-- Controls Area -->
+        <div class="controls-panel">
+
+            <!-- Simulation Controls -->
+            <div class="control-card">
+                <div class="card-title">🎥 실시간 시뮬레이션 (Simulation)</div>
+                <div style="font-size: 12px; color: #94a3b8; margin-bottom: 15px;">
+                    실제 카메라 입력을 가정하여 AI의 실시간 반응과 맞춤형 처방을 테스트합니다.
+                </div>
+
+                <div class="scenario-btn-group">
+                    <button class="scenario-btn" onclick="simulateThrow('user')">
+                        <div class="s-icon">👤</div>
+                        <div class="s-info">
+                            <div class="s-name">시나리오 A (나)</div>
+                            <div class="s-desc">자세 좋음 / 스트라이드 부족</div>
+                        </div>
+                    </button>
+
+                    <button class="scenario-btn" onclick="simulateThrow('friend')">
+                        <div class="s-icon">🦖</div>
+                        <div class="s-info">
+                            <div class="s-name">시나리오 B (친구)</div>
+                            <div class="s-desc">티라노 자세 (Inverted W)</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Real-time Metrics -->
+            <div class="control-card">
+                <div class="card-title">⚡ 실시간 파라미터 (Live Data)</div>
+
+                <div class="risk-meter-container">
+                    <div class="meter-label">
+                        <span>Stride Length (% of Height)</span>
+                        <span id="strideVal">--</span>
+                    </div>
+                    <div class="meter-bar">
+                        <div class="meter-fill" id="strideBar" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div class="risk-meter-container" style="margin-top: 20px;">
+                    <div class="meter-label">
+                        <span>Arm Angle Efficiency</span>
+                        <span id="armVal">--</span>
+                    </div>
+                    <div class="meter-bar">
+                        <div class="meter-fill" id="armBar" style="background: #2979ff; width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Log -->
+            <div class="control-card">
+                <div class="card-title">💻 AI Logic Trace</div>
+                <div class="data-display" id="debugLog">
+                    System Ready.<br>
+                    Waiting for user input...
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+
+        // UI Elements
+        const phases = ['Ready', 'Set', 'Stride', 'Cock', 'Acceleration', 'Release', 'Finish'];
+        let currentPhaseIdx = 0;
+        let isSimulating = false;
+        let simType = ''; // 'user' or 'friend'
+
+        function resize() {
+            const rect = document.getElementById('canvasWrap').getBoundingClientRect();
+            width = canvas.width = rect.width;
+            height = canvas.height = rect.height;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Logging
+        function updateLog(msg) {
+            const log = document.getElementById('debugLog');
+            const time = new Date().toLocaleTimeString().split(' ')[0];
+            log.innerHTML = `<span style="color:#666">[${time}]</span> ${msg}<br>` + log.innerHTML;
+        }
+
+        // Simulation Logic
+        function simulateThrow(type) {
+            if (isSimulating) return;
+            isSimulating = true;
+            simType = type;
+            currentPhaseIdx = 0;
+
+            // UI Reset
+            document.getElementById('resultPanel').classList.remove('active');
+            updateLog(`> Starting Simulation: <b>Scenario ${type === 'user' ? 'A (User)' : 'B (Friend)'}</b>`);
+            document.getElementById('instructionText').innerText = "투구 중... (AI Tracking)";
+            document.getElementById('recDot').style.opacity = 1;
+
+            // Start Animation Sequence
+            let sequence = setInterval(() => {
+                currentPhaseIdx++;
+                document.getElementById('phaseBadge').innerText = "Phase: " + phases[currentPhaseIdx];
+                updateLog(`> Detected Phase: ${phases[currentPhaseIdx]}`);
+
+                // Update Meters dynamically
+                updateMetersLive(type, currentPhaseIdx);
+
+                if (currentPhaseIdx >= phases.length - 1) {
+                    clearInterval(sequence);
+                    finishThrow(type);
+                }
+            }, 500); // 0.5s per phase
+        }
+
+        function updateMetersLive(type, phaseIdx) {
+            // Simulate changing values during throw
+            let stride = 0;
+            let arm = 0;
+
+            if (type === 'user') {
+                // User: Short stride, Good arm
+                stride = Math.min(65, phaseIdx * 12);
+                arm = Math.min(90, phaseIdx * 18);
+            } else {
+                // Friend: Good stride, Bad arm (T-Rex)
+                stride = Math.min(85, phaseIdx * 15);
+                arm = Math.min(45, phaseIdx * 8); // Low arm angle
+            }
+
+            document.getElementById('strideBar').style.width = stride + "%";
+            document.getElementById('strideVal').innerText = stride + "%";
+
+            document.getElementById('armBar').style.width = arm + "%";
+            document.getElementById('armVal').innerText = arm + "/100";
+        }
+
+        function finishThrow(type) {
+            isSimulating = false;
+            document.getElementById('recDot').style.opacity = 0.5;
+            document.getElementById('instructionText').innerText = "분석 완료!";
+            updateLog("> <b>Motion Captured.</b> Generating Feedback...");
+
+            setTimeout(() => {
+                showResult(type);
+            }, 800);
+        }
+
+        function showResult(type) {
+            const panel = document.getElementById('resultPanel');
+            const title = document.getElementById('resultTitle');
+            const body = document.getElementById('resultBody');
+
+            panel.classList.add('active');
+
+            if (type === 'user') {
+                title.innerText = "분석 결과: A유형 (기능적 제한)";
+                title.style.color = "#ffb74d"; // Warning Color
+                body.innerHTML = `
+                    <div class="result-score">82점 <span style="font-size:14px; color:#aaa">/ 100</span></div>
+                    <div class="result-diagnosis">
+                        <strong>진단:</strong> 폼은 매우 안정적이나, <span style="color:#ffb74d">스트라이드 길이</span>가 신장의 68%로 짧습니다. 
+                        이는 자세 문제가 아닌 <strong>고관절 유연성 부족</strong>이 원인입니다.
+                    </div>
+                    <div class="curriculum-box">
+                        <div class="box-title">🏆 AI 맞춤 처방 (Adaptive Plan)</div>
+                        <ul style="margin:0; padding-left:20px; font-size:14px;">
+                            <li>투구 연습 금지 (현재 폼 유지)</li>
+                            <li><strong>[드릴 1]</strong> 개구리 자세 스트레칭 (3set)</li>
+                            <li><strong>[드릴 2]</strong> 런지 트위스트 (20회)</li>
+                        </ul>
+                    </div>
+                `;
+                updateLog("> Result: Functional Issue Detected. Assigning Mobility Drills.");
+            } else {
+                title.innerText = "분석 결과: B유형 (구조적 결함)";
+                title.style.color = "#ff5252"; // Danger Color
+                body.innerHTML = `
+                    <div class="result-score">58점 <span style="font-size:14px; color:#aaa">/ 100</span></div>
+                    <div class="result-diagnosis">
+                        <strong>진단:</strong> 팔꿈치가 어깨보다 낮은 <span style="color:#ff5252">Inverted W (티라노 자세)</span>가 감지되었습니다. 
+                        부상 위험이 매우 높으므로 즉시 교정이 필요합니다.
+                    </div>
+                    <div class="curriculum-box">
+                        <div class="box-title">🚑 AI 맞춤 처방 (Adaptive Plan)</div>
+                        <ul style="margin:0; padding-left:20px; font-size:14px;">
+                            <li>실전 투구 즉시 중단</li>
+                            <li><strong>[드릴 1]</strong> 팔꿈치 거상 쉐도우 피칭</li>
+                            <li><strong>[드릴 2]</strong> 어깨 회전근개 강화 밴드 운동</li>
+                        </ul>
+                    </div>
+                `;
+                updateLog("> Result: Structural Fault Detected (Inverted W). Assigning Correction Drills.");
+            }
+        }
+
+        function hideResult() {
+            document.getElementById('resultPanel').classList.remove('active');
+            document.getElementById('instructionText').innerText = "카메라를 보고 투구 자세를 취해주세요.";
+            // Reset Meters
+            document.getElementById('strideBar').style.width = "0%";
+            document.getElementById('strideVal').innerText = "--";
+            document.getElementById('armBar').style.width = "0%";
+            document.getElementById('armVal').innerText = "--";
+        }
+
+        // Canvas Loop (Visualizer)
+        function animate() {
+            // Keep the skeleton animation running in background but simpler
+            // (Code abbreviated for brevity as focus is on logic flow simulation)
+            requestAnimationFrame(animate);
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, width, height);
+
+            // Grid
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < width; i += 50) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke(); }
+            for (let i = 0; i < height; i += 50) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke(); }
+
+            // Placeholder for User Silhouette
+            ctx.fillStyle = '#334155';
+            ctx.font = "20px Pretendard";
+            ctx.textAlign = "center";
+            ctx.fillText(isSimulating ? "Tracking..." : "Camera Area", width / 2, height / 2);
+
+            // Draw a simple circle representing "Head" tracking
+            const time = Date.now() * 0.002;
+            const hx = width / 2 + Math.sin(time) * (isSimulating ? 100 : 20);
+
+            ctx.beginPath();
+            ctx.arc(hx, height / 2 - 50, 10, 0, Math.PI * 2);
+            ctx.fillStyle = isSimulating ? '#00e676' : '#555';
+            ctx.fill();
+        }
+        animate();
+
+    </script>
+
+    <style>
+        /* Additional Styles for v2 */
+        .camera-lens {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 5;
+        }
+
+        .rec-indicator {
+            color: #ff5252;
+            font-weight: bold;
+            font-size: 14px;
+            opacity: 0.5;
+            transition: 0.3s;
+        }
+
+        .instruction-overlay {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .result-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 50;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .result-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #resultTitle {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .result-score {
+            font-size: 48px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .result-diagnosis {
+            font-size: 16px;
+            color: #e2e8f0;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .curriculum-box {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .box-title {
+            color: #00e676;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .curriculum-box li {
+            margin-bottom: 8px;
+            color: #cbd5e1;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 16px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .scenario-btn-group {
+            display: flex;
+            gap: 10px;
+            flex-direction: column;
+        }
+
+        .scenario-btn {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: #334155;
+            border: 1px solid #475569;
+            padding: 15px;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: left;
+        }
+
+        .scenario-btn:hover {
+            background: #475569;
+            border-color: #00e676;
+        }
+
+        .s-icon {
+            font-size: 24px;
+        }
+
+        .s-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .s-desc {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+    </style>
+</body>
+
+</html>
+```
