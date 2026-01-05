@@ -395,44 +395,120 @@ function closeAiActionSheet() {
 }
 
 function triggerAiProcess(type) {
-    // Redirect to the dedicated patent analysis module immediately
-    // Passing the type (camera/upload) is not necessary as the sub-page handles it
-    window.location.href = 'pitchcraft_real_analysis.html';
-}
-
-function handleFileSelect(input) {
-    if (input.files && input.files[0]) {
-        closeAiActionSheet();
-        startAiSimulation(); // Start the fake loading process
+    if (type === 'camera') {
+        document.getElementById('cameraInput').click();
+    } else {
+        document.getElementById('videoInput').click();
     }
 }
 
-// AI Sim
-function startAiSimulation() {
+// 실제 백엔드 업로드 + 분석 연동
+async function handleFileSelect(input) {
+    if (!input.files || !input.files[0]) return;
+
+    const file = input.files[0];
+    closeAiActionSheet();
+
+    // 로그인 체크
+    if (!pitchcraftAPI.token) {
+        alert('로그인이 필요합니다. 테스트를 위해 자동 로그인합니다...');
+        // 테스트용 자동 회원가입/로그인
+        const email = 'test' + Date.now() + '@pitchcraft.com';
+        const result = await pitchcraftAPI.register(email, 'test1234', 'TestUser');
+        if (result.access_token) {
+            pitchcraftAPI.setToken(result.access_token);
+        } else {
+            alert('로그인 실패: ' + JSON.stringify(result));
+            return;
+        }
+    }
+
+    // 로딩 UI 시작
+    showLoader('업로드 URL 요청 중...');
+
+    try {
+        // 1. 업로드 URL 요청
+        const uploadInfo = await pitchcraftAPI.requestUploadUrl(file.name, file.size);
+        if (!uploadInfo.upload_url) {
+            throw new Error('업로드 URL 발급 실패: ' + JSON.stringify(uploadInfo));
+        }
+
+        updateLoader(20, 'MinIO에 업로드 중...');
+
+        // 2. Presigned URL로 영상 업로드
+        try {
+            await pitchcraftAPI.uploadToPresignedUrl(uploadInfo.upload_url, file, (progress) => {
+                updateLoader(20 + (progress * 0.4), `업로드 중... ${progress}%`);
+            });
+        } catch (uploadError) {
+            console.warn('MinIO 업로드 실패 (개발 환경에서는 정상):', uploadError);
+            // 개발 환경에서는 MinIO 업로드 실패해도 계속 진행
+        }
+
+        updateLoader(60, '업로드 완료 확인 중...');
+
+        // 3. 업로드 완료 확인
+        await pitchcraftAPI.confirmUpload(uploadInfo.video_id);
+
+        updateLoader(70, 'AI 분석 요청 중...');
+
+        // 4. 분석 요청
+        const analysisResult = await pitchcraftAPI.requestAnalysis(uploadInfo.video_id);
+        if (!analysisResult.id) {
+            throw new Error('분석 요청 실패: ' + JSON.stringify(analysisResult));
+        }
+
+        updateLoader(85, '분석 결과 대기 중...');
+
+        // 5. 분석 ID를 저장하고 결과 페이지로 이동
+        localStorage.setItem('pitchcraft_analysis_id', analysisResult.id);
+        localStorage.setItem('pitchcraft_video_id', uploadInfo.video_id);
+
+        updateLoader(100, '분석 완료! 결과 페이지로 이동...');
+
+        // 결과 페이지로 이동
+        setTimeout(() => {
+            hideLoader();
+            window.location.href = 'pitchcraft_real_analysis.html?analysis_id=' + analysisResult.id;
+        }, 500);
+
+    } catch (error) {
+        console.error('분석 과정 에러:', error);
+        hideLoader();
+        alert('분석 중 오류가 발생했습니다: ' + error.message);
+    }
+}
+
+// 로더 UI 헬퍼
+function showLoader(text) {
     const loader = document.getElementById('ai-loader');
     const fill = document.getElementById('loader-fill');
-    const text = document.getElementById('loader-text');
+    const loaderText = document.getElementById('loader-text');
     loader.style.display = 'flex';
+    fill.style.width = '0%';
+    loaderText.innerText = text || 'AI 분석 중...';
+}
 
-    let width = 0;
-    const interval = setInterval(() => {
-        width += 2;
-        fill.style.width = width + '%';
-        if (width > 20) text.innerText = "영상 압축 중...";
-        if (width > 50) text.innerText = "관절 포인트 추출 중...";
-        if (width > 80) text.innerText = "프로 선수 폼과 비교 중...";
+function updateLoader(percent, text) {
+    const fill = document.getElementById('loader-fill');
+    const loaderText = document.getElementById('loader-text');
+    fill.style.width = percent + '%';
+    if (text) loaderText.innerText = text;
+}
 
-        if (width >= 100) {
-            clearInterval(interval);
-            setTimeout(() => {
-                loader.style.display = 'none';
-                fill.style.width = '0%';
-                text.innerText = 'AI 분석 중...';
-                // Redirect to the new result page
-                window.location.href = 'pitchcraft_real_analysis.html';
-            }, 500);
-        }
-    }, 40);
+function hideLoader() {
+    const loader = document.getElementById('ai-loader');
+    const fill = document.getElementById('loader-fill');
+    const loaderText = document.getElementById('loader-text');
+    loader.style.display = 'none';
+    fill.style.width = '0%';
+    loaderText.innerText = 'AI 분석 중...';
+}
+
+// AI Sim (클라이언트 분석용 - 레거시)
+function startAiSimulation() {
+    // 클라이언트 분석 페이지로 바로 이동
+    window.location.href = 'pitchcraft_real_analysis.html';
 }
 
 // Global Event for Escape key

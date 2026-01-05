@@ -2,8 +2,11 @@
 // 백엔드 서버 연결 설정
 
 const API_CONFIG = {
-    // Render 배포 서버 URL
-    BASE_URL: 'https://pitchcraft-backend-mll9.onrender.com',
+    // 환경에 따라 URL 자동 선택
+    // localhost에서 실행 시 Docker 백엔드 사용, 그 외에는 Render 배포 서버
+    BASE_URL: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:8000'
+        : 'https://pitchcraft-backend-mll9.onrender.com',
 
     // API 버전
     VERSION: 'v1',
@@ -137,6 +140,117 @@ class PitchCraftAPI {
             console.error('Get profile failed:', error);
             return { error: error.message };
         }
+    }
+
+    // ========= 영상 업로드 관련 =========
+
+    // 업로드 URL 요청
+    async requestUploadUrl(filename, fileSize) {
+        try {
+            const response = await fetch(
+                `${this.baseUrl}${API_CONFIG.ENDPOINTS.VIDEOS.UPLOAD_REQUEST}?filename=${encodeURIComponent(filename)}&file_size=${fileSize}`,
+                {
+                    method: 'POST',
+                    headers: this.getHeaders()
+                }
+            );
+            return await response.json();
+        } catch (error) {
+            console.error('Upload URL request failed:', error);
+            return { error: error.message };
+        }
+    }
+
+    // Presigned URL로 영상 업로드 (MinIO/S3 직접 업로드)
+    async uploadToPresignedUrl(presignedUrl, file, onProgress) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('PUT', presignedUrl, true);
+            xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+
+            if (onProgress) {
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        onProgress(Math.round((e.loaded / e.total) * 100));
+                    }
+                };
+            }
+
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve({ success: true });
+                } else {
+                    reject(new Error(`Upload failed: ${xhr.status}`));
+                }
+            };
+            xhr.onerror = () => reject(new Error('Network error during upload'));
+            xhr.send(file);
+        });
+    }
+
+    // 업로드 완료 확인
+    async confirmUpload(videoId) {
+        try {
+            const response = await fetch(
+                `${this.baseUrl}/videos/${videoId}/upload-complete`,
+                {
+                    method: 'POST',
+                    headers: this.getHeaders()
+                }
+            );
+            return await response.json();
+        } catch (error) {
+            console.error('Confirm upload failed:', error);
+            return { error: error.message };
+        }
+    }
+
+    // ========= 분석 관련 =========
+
+    // 분석 요청
+    async requestAnalysis(videoId) {
+        try {
+            const response = await fetch(
+                `${this.baseUrl}${API_CONFIG.ENDPOINTS.ANALYSES.REQUEST}`,
+                {
+                    method: 'POST',
+                    headers: this.getHeaders(),
+                    body: JSON.stringify({ video_id: videoId })
+                }
+            );
+            return await response.json();
+        } catch (error) {
+            console.error('Analysis request failed:', error);
+            return { error: error.message };
+        }
+    }
+
+    // 분석 결과 조회
+    async getAnalysisResult(analysisId) {
+        try {
+            const response = await fetch(
+                `${this.baseUrl}${API_CONFIG.ENDPOINTS.ANALYSES.REQUEST}/${analysisId}`,
+                {
+                    headers: this.getHeaders()
+                }
+            );
+            return await response.json();
+        } catch (error) {
+            console.error('Get analysis result failed:', error);
+            return { error: error.message };
+        }
+    }
+
+    // 분석 결과 폴링 (완료될 때까지 대기)
+    async pollAnalysisResult(analysisId, intervalMs = 2000, maxAttempts = 30) {
+        for (let i = 0; i < maxAttempts; i++) {
+            const result = await this.getAnalysisResult(analysisId);
+            if (result.efficiency_score !== null && result.efficiency_score !== undefined) {
+                return result; // 분석 완료
+            }
+            await new Promise(resolve => setTimeout(resolve, intervalMs));
+        }
+        return { error: 'Analysis timeout - still processing' };
     }
 }
 
