@@ -469,7 +469,7 @@ async function handleFileSelect(input) {
         // 결과 페이지로 이동
         setTimeout(() => {
             hideLoader();
-            window.location.href = 'pitchcraft_real_analysis.html?analysis_id=' + analysisResult.id;
+            window.location.href = 'kinematic_analysis.html';
         }, 500);
 
     } catch (error) {
@@ -508,7 +508,7 @@ function hideLoader() {
 // AI Sim (클라이언트 분석용 - 레거시)
 function startAiSimulation() {
     // 클라이언트 분석 페이지로 바로 이동
-    window.location.href = 'pitchcraft_real_analysis.html';
+    window.location.href = 'kinematic_analysis.html';
 }
 
 // Global Event for Escape key
