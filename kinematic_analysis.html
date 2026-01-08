@@ -791,22 +791,27 @@
                     <div id="normalizedMetricsDisplay" style="margin-top: 15px;">
                         <div
                             style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-glass);">
-                            <span style="color: var(--text-muted); font-size: 12px;">정규화 골반 속도</span>
-                            <span id="normPelvisVel" style="color: #FF5252; font-weight: 600;">--</span>
+                            <span style="color: var(--text-muted); font-size: 11px; white-space: nowrap;">골반 속도
+                                (정규화)</span>
+                            <span id="normPelvisVel"
+                                style="color: #FF5252; font-weight: 600; font-size: 12px;">--</span>
                         </div>
                         <div
                             style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-glass);">
-                            <span style="color: var(--text-muted); font-size: 12px;">정규화 몸통 속도</span>
-                            <span id="normTorsoVel" style="color: #448AFF; font-weight: 600;">--</span>
+                            <span style="color: var(--text-muted); font-size: 11px; white-space: nowrap;">몸통 속도
+                                (정규화)</span>
+                            <span id="normTorsoVel" style="color: #448AFF; font-weight: 600; font-size: 12px;">--</span>
                         </div>
                         <div
                             style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-glass);">
-                            <span style="color: var(--text-muted); font-size: 12px;">정규화 팔 속도</span>
-                            <span id="normArmVel" style="color: #00E676; font-weight: 600;">--</span>
+                            <span style="color: var(--text-muted); font-size: 11px; white-space: nowrap;">팔 속도
+                                (정규화)</span>
+                            <span id="normArmVel" style="color: #00E676; font-weight: 600; font-size: 12px;">--</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-                            <span style="color: var(--text-muted); font-size: 12px;">정규화 손 속도</span>
-                            <span id="normHandVel" style="color: #E040FB; font-weight: 600;">--</span>
+                            <span style="color: var(--text-muted); font-size: 11px; white-space: nowrap;">손 속도
+                                (정규화)</span>
+                            <span id="normHandVel" style="color: #E040FB; font-weight: 600; font-size: 12px;">--</span>
                         </div>
                     </div>
                     <div id="pitcherBodyInfoDisplay"
@@ -2700,7 +2705,7 @@
             // ========================================
 
             const GEMINI_API_KEY = 'AIzaSyB60rcR3fA8x3R977u_PgFw7LpxSBSqyTw';
-            const GEMINI_MODEL = 'gemini-3-flash-preview';  // Preview version for v1beta API
+            const GEMINI_MODEL = 'gemini-2.0-flash';  // Updated to valid model
             const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
             // Gemini API 호출 함수
@@ -4391,9 +4396,10 @@ ${issues.length > 0 ? issues.map((issue, i) => `${i + 1}. ${issue}`).join('\n') 
                 }
 
                 // 🔧 IMPROVED: Fallback to hand velocity if:
-                // 1. Ball tracking completely failed (speedMethod still HAND_ESTIMATION)
-                // 2. Ball tracking confidence is LOW (likely tracking wrong object)
-                const shouldFallbackToHand = speedMethod === 'HAND_ESTIMATION' || speedConfidence === 'LOW';
+                // 1. NOT a dry swing (ball should be detected for speed estimation)
+                // 2. Ball tracking completely failed (speedMethod still HAND_ESTIMATION)
+                // 3. Ball tracking confidence is LOW (likely tracking wrong object)
+                const shouldFallbackToHand = !isDrySwing && (speedMethod === 'HAND_ESTIMATION' || speedConfidence === 'LOW');
 
                 if (shouldFallbackToHand) {
                     const normalizedHandSpeed = maxHandVel / estimatedHeight;
@@ -4428,12 +4434,15 @@ ${issues.length > 0 ? issues.map((issue, i) => `${i + 1}. ${issue}`).join('\n') 
 
                 // Realism bounds + NaN 방지
                 // 🔧 NaN 또는 Infinity가 발생했을 경우 안전한 기본값 사용
-                if (isNaN(speedKmh) || !isFinite(speedKmh)) {
-                    console.warn('⚠️ Speed calculated as NaN/Infinity, using fallback');
-                    speedKmh = 85; // 합리적인 기본 속도
+                // 단, dry swing일 경우는 speedKmh를 변경하지 않음 (N/A로 표시해야 함)
+                if (!isDrySwing) {
+                    if (isNaN(speedKmh) || !isFinite(speedKmh)) {
+                        console.warn('⚠️ Speed calculated as NaN/Infinity, using fallback');
+                        speedKmh = 85; // 합리적인 기본 속도
+                    }
+                    if (speedKmh < 40) speedKmh = 40;
+                    if (speedKmh > 165) speedKmh = 165;
                 }
-                if (speedKmh < 40) speedKmh = 40;
-                if (speedKmh > 165) speedKmh = 165;
 
                 // EVIDENCE CALCULATION V2 (Physics Aware)
                 // User Feedback: Flight distance is shorter than 18.44m due to release point extension.
