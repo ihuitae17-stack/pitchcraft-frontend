@@ -12,6 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
     <!-- Chart.js for Kinematic Sequence Visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- html2canvas for Share Feature (PLG) -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
     <style>
         :root {
@@ -331,9 +333,14 @@
                 </div>
                 <div style="color: #666; font-size: 12px; margin-top: 5px;">Analysis ID: #PC-2025-X92</div>
             </div>
-            <button onclick="location.reload()"
-                style="background:#222; border:1px solid #333; color:#fff; padding:8px 16px; border-radius:8px; cursor:pointer; font-size:12px;">새로운
-                분석</button>
+            <div style="display:flex; gap:8px;">
+                <button onclick="shareResult()"
+                    style="background:var(--primary); border:none; color:#000; padding:8px 16px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:bold;">📤
+                    결과 공유</button>
+                <button onclick="location.reload()"
+                    style="background:#222; border:1px solid #333; color:#fff; padding:8px 16px; border-radius:8px; cursor:pointer; font-size:12px;">새로운
+                    분석</button>
+            </div>
         </div>
 
         <!-- 1. Energy Efficiency (The Core Metric) -->
@@ -1330,6 +1337,50 @@
                     ctx.fill();
                 }
             });
+        }
+
+        // ========================================
+        // 📤 PLG: Share Result Feature
+        // 마케팅 자동화를 위한 결과 공유 기능
+        // ========================================
+        async function shareResult() {
+            const report = document.getElementById('reportScreen');
+            const score = document.getElementById('efficiencyScore').innerText;
+
+            // Show loading state
+            const shareBtn = event.target;
+            const originalText = shareBtn.innerText;
+            shareBtn.innerText = '캡처 중...';
+            shareBtn.disabled = true;
+
+            try {
+                const canvas = await html2canvas(report, {
+                    backgroundColor: '#050505',
+                    scale: 2, // High resolution for Instagram
+                    useCORS: true,
+                    logging: false
+                });
+
+                // Convert to downloadable image
+                const link = document.createElement('a');
+                link.download = `pitchcraft_result_${score}점.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                // Success feedback
+                shareBtn.innerText = '✅ 저장됨!';
+                setTimeout(() => {
+                    shareBtn.innerText = originalText;
+                    shareBtn.disabled = false;
+                }, 2000);
+            } catch (error) {
+                console.error('Share capture failed:', error);
+                shareBtn.innerText = '❌ 실패';
+                setTimeout(() => {
+                    shareBtn.innerText = originalText;
+                    shareBtn.disabled = false;
+                }, 2000);
+            }
         }
 
     </script>
