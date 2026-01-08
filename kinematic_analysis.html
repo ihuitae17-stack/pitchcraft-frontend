@@ -919,6 +919,10 @@
             const canvas = document.getElementById('scannerCanvas');
             const ctx = canvas.getContext('2d');
 
+            // 🔧 NEW: Global variables for storing video dimensions for replay
+            let storedVideoWidth = 640;
+            let storedVideoHeight = 480;
+
             let poseHistory = [];
             // Fake Steps texts
             const steps = [
@@ -1051,6 +1055,11 @@
                 const duration = video.duration;
                 const step = 0.05; // 20 FPS sampling
                 let currentTime = 0;
+
+                // 🔧 NEW: Store video dimensions for replay
+                storedVideoWidth = video.videoWidth || 640;
+                storedVideoHeight = video.videoHeight || 480;
+                console.log(`📐 Stored video dimensions: ${storedVideoWidth}x${storedVideoHeight}`);
 
                 // Resize for performance
                 const offscreen = document.createElement('canvas');
@@ -4720,12 +4729,47 @@ ${issues.length > 0 ? issues.map((issue, i) => `${i + 1}. ${issue}`).join('\n') 
 
             // Replay Logic
             let replayCtx;
+
             function startReplay() {
                 const rCanvas = document.getElementById('replayCanvas');
-                // Ensure canvas is visible/sized
-                rCanvas.width = video.videoWidth;
-                rCanvas.height = video.videoHeight;
+
+                // 🔧 NEW: Use stored dimensions or video dimensions, with fallback
+                let canvasWidth = video.videoWidth || storedVideoWidth || 640;
+                let canvasHeight = video.videoHeight || storedVideoHeight || 480;
+
+                // Ensure canvas has valid dimensions
+                if (canvasWidth > 0 && canvasHeight > 0) {
+                    rCanvas.width = canvasWidth;
+                    rCanvas.height = canvasHeight;
+                } else {
+                    // Last resort fallback
+                    rCanvas.width = 640;
+                    rCanvas.height = 480;
+                    console.warn('⚠️ Video dimensions not available, using fallback: 640x480');
+                }
+
                 replayCtx = rCanvas.getContext('2d');
+
+                // 🔧 NEW: Check if video is ready for playback
+                if (!video.src || video.readyState < 2) {
+                    console.warn('⚠️ Video not ready for replay. Waiting for metadata...');
+                    // Draw a placeholder message
+                    replayCtx.fillStyle = '#1a1a2e';
+                    replayCtx.fillRect(0, 0, rCanvas.width, rCanvas.height);
+                    replayCtx.fillStyle = '#888';
+                    replayCtx.font = '16px Arial';
+                    replayCtx.textAlign = 'center';
+                    replayCtx.fillText('영상 로딩 중...', rCanvas.width / 2, rCanvas.height / 2);
+
+                    // Wait for video to be ready
+                    video.addEventListener('loadedmetadata', () => {
+                        console.log('✅ Video metadata loaded, starting replay');
+                        storedVideoWidth = video.videoWidth;
+                        storedVideoHeight = video.videoHeight;
+                        startReplay();  // Retry
+                    }, { once: true });
+                    return;
+                }
 
                 video.currentTime = 0;
                 video.play();
