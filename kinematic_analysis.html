@@ -4046,9 +4046,10 @@ ${issues.length > 0 ? issues.map((issue, i) => `${i + 1}. ${issue}`).join('\n') 
                 // 클로드/제미나이 통합 알고리즘
                 // ========================================
                 // fps 동적 계산 (poseHistory 프레임 수 / 영상 길이)
-                const videoDuration = video.duration;
-                const actualFps = poseHistory.length / videoDuration;
-                console.log(`Analysis FPS: ${actualFps.toFixed(1)} (${poseHistory.length} frames / ${videoDuration.toFixed(1)}s)`);
+                // 🔧 NaN 방지: duration이 0이거나 NaN이면 30fps 기본값 사용
+                const videoDuration = video.duration && !isNaN(video.duration) && video.duration > 0 ? video.duration : 1;
+                const actualFps = (poseHistory.length > 0 && videoDuration > 0) ? (poseHistory.length / videoDuration) : 30;
+                console.log(`Analysis FPS: ${isNaN(actualFps) ? 30 : actualFps.toFixed(1)} (${poseHistory.length} frames / ${videoDuration.toFixed(1)}s)`);
 
                 const angularVelocityData = calculateAngularVelocity(poseHistory, actualFps);
                 const sequenceResult = analyzeKinematicSequence(angularVelocityData, actualFps);
@@ -4273,8 +4274,9 @@ ${issues.length > 0 ? issues.map((issue, i) => `${i + 1}. ${issue}`).join('\n') 
                 }
 
                 // 3. CONTEXT AWARENESS (Crow Hop & Static)
-                let startX = poseHistory[0].keypoints.find(k => k.name === 'left_hip')?.x || 0;
-                let endX = poseHistory[poseHistory.length - 1].keypoints.find(k => k.name === 'left_hip')?.x || 0;
+                // 🔧 NaN 방지: poseHistory가 비어있을 경우 안전하게 처리
+                let startX = poseHistory.length > 0 ? (poseHistory[0].keypoints.find(k => k.name === 'left_hip')?.x || 0) : 0;
+                let endX = poseHistory.length > 0 ? (poseHistory[poseHistory.length - 1].keypoints.find(k => k.name === 'left_hip')?.x || 0) : 0;
                 let totalDistTraveled = Math.abs(endX - startX);
                 let frameWidth = canvas.width;
                 let isCrowHop = (totalDistTraveled / frameWidth) > 0.30;
@@ -4424,7 +4426,12 @@ ${issues.length > 0 ? issues.map((issue, i) => `${i + 1}. ${issue}`).join('\n') 
                     }
                 }
 
-                // Realism bounds
+                // Realism bounds + NaN 방지
+                // 🔧 NaN 또는 Infinity가 발생했을 경우 안전한 기본값 사용
+                if (isNaN(speedKmh) || !isFinite(speedKmh)) {
+                    console.warn('⚠️ Speed calculated as NaN/Infinity, using fallback');
+                    speedKmh = 85; // 합리적인 기본 속도
+                }
                 if (speedKmh < 40) speedKmh = 40;
                 if (speedKmh > 165) speedKmh = 165;
 
