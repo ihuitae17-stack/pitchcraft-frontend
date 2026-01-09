@@ -402,80 +402,52 @@ function triggerAiProcess(type) {
     }
 }
 
-// 실제 백엔드 업로드 + 분석 연동
+// 백엔드 없이 직접 분석 페이지로 이동
 async function handleFileSelect(input) {
     if (!input.files || !input.files[0]) return;
 
     const file = input.files[0];
     closeAiActionSheet();
 
-    // 로그인 체크
-    if (!pitchcraftAPI.token) {
-        alert('로그인이 필요합니다. 테스트를 위해 자동 로그인합니다...');
-        // 테스트용 자동 회원가입/로그인
-        const email = 'test' + Date.now() + '@pitchcraft.com';
-        const result = await pitchcraftAPI.register(email, 'test1234', 'TestUser');
-        if (result.access_token) {
-            pitchcraftAPI.setToken(result.access_token);
-        } else {
-            alert('로그인 실패: ' + JSON.stringify(result));
-            return;
-        }
+    // 파일 유효성 검사
+    if (!file.type.startsWith('video/')) {
+        alert('❌ 비디오 파일만 업로드 가능합니다.\n지원 형식: MP4, MOV, WebM');
+        return;
     }
 
-    // 로딩 UI 시작
-    showLoader('업로드 URL 요청 중...');
+    // 파일 크기 체크 (100MB 제한)
+    if (file.size > 100 * 1024 * 1024) {
+        alert('⚠️ 파일이 너무 큽니다.\n100MB 이하의 영상을 사용해주세요.');
+        return;
+    }
+
+    // 로딩 UI 표시
+    showLoader('영상 준비 중...');
 
     try {
-        // 1. 업로드 URL 요청
-        const uploadInfo = await pitchcraftAPI.requestUploadUrl(file.name, file.size);
-        if (!uploadInfo.upload_url) {
-            throw new Error('업로드 URL 발급 실패: ' + JSON.stringify(uploadInfo));
-        }
+        // Blob URL 생성 및 저장
+        const blobUrl = URL.createObjectURL(file);
 
-        updateLoader(20, 'MinIO에 업로드 중...');
+        // sessionStorage에 영상 정보 저장 (새 탭에서도 접근 가능)
+        sessionStorage.setItem('pitchcraft_video_url', blobUrl);
+        sessionStorage.setItem('pitchcraft_video_name', file.name);
+        sessionStorage.setItem('pitchcraft_video_size', file.size.toString());
 
-        // 2. Presigned URL로 영상 업로드
-        try {
-            await pitchcraftAPI.uploadToPresignedUrl(uploadInfo.upload_url, file, (progress) => {
-                updateLoader(20 + (progress * 0.4), `업로드 중... ${progress}%`);
-            });
-        } catch (uploadError) {
-            console.warn('MinIO 업로드 실패 (개발 환경에서는 정상):', uploadError);
-            // 개발 환경에서는 MinIO 업로드 실패해도 계속 진행
-        }
+        console.log('📹 Video prepared:', file.name, (file.size / 1024 / 1024).toFixed(2) + 'MB');
 
-        updateLoader(60, '업로드 완료 확인 중...');
+        updateLoader(50, '분석 페이지로 이동 중...');
 
-        // 3. 업로드 완료 확인
-        await pitchcraftAPI.confirmUpload(uploadInfo.video_id);
-
-        updateLoader(70, 'AI 분석 요청 중...');
-
-        // 4. 분석 요청
-        const analysisResult = await pitchcraftAPI.requestAnalysis(uploadInfo.video_id);
-        if (!analysisResult.id) {
-            throw new Error('분석 요청 실패: ' + JSON.stringify(analysisResult));
-        }
-
-        updateLoader(85, '분석 결과 대기 중...');
-
-        // 5. 분석 ID를 저장하고 결과 페이지로 이동
-        localStorage.setItem('pitchcraft_analysis_id', analysisResult.id);
-        localStorage.setItem('pitchcraft_video_id', uploadInfo.video_id);
-
-        updateLoader(100, '분석 완료! 결과 페이지로 이동...');
-
-        // 결과 페이지로 이동
+        // 잠시 대기 후 분석 페이지로 이동
         setTimeout(() => {
             hideLoader();
+            // 분석 페이지로 직접 이동
             window.location.href = 'kinematic_analysis.html';
         }, 500);
 
     } catch (error) {
-        console.error('분석 과정 에러:', error);
+        console.error('파일 처리 에러:', error);
         hideLoader();
-        alert('분석 중 오류가 발생했습니다: ' + error.message);
+        alert('❌ 파일 처리 중 오류가 발생했습니다.\n다른 영상으로 시도해주세요.');
     }
 }
 

@@ -660,7 +660,7 @@
         <div class="metric-card">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div>
-                    <div class="metric-label">ENERGY TRANSFER EFFICIENCY</div>
+                    <div class="metric-label">에너지 전달 효율</div>
                     <div class="metric-value" style="color:var(--primary); font-size:48px;">
                         <span id="efficiencyScore">84</span><span style="font-size:20px;">/100</span>
                     </div>
@@ -674,8 +674,8 @@
             <div class="energy-leak-visual">
                 <div
                     style="display:flex; justify-content:space-between; font-size:12px; color:#888; margin-bottom:10px;">
-                    <span>Kinematic Sequence Gap</span>
-                    <span style="color:#fff;">0.02s Leak Detected</span>
+                    <span>키네마틱 시퀀스 간격</span>
+                    <span style="color:#fff;" id="leakValue">0.02s 에너지 누수</span>
                 </div>
                 <!-- Simulated Leak Bar -->
                 <div style="height:6px; background:#333; border-radius:3px; overflow:hidden;">
@@ -687,25 +687,24 @@
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:20px;">
             <!-- Velocity -->
             <div class="metric-card" style="margin:0; padding:20px;">
-                <div class="metric-label">EST. VELOCITY</div>
+                <div class="metric-label">예상 구속</div>
                 <div class="metric-value" style="color:#FFF;" id="speedVal">-- km/h</div>
                 <div id="speedDetail" style="font-size:10px; color:#666; margin-top:6px; line-height:1.4;"></div>
             </div>
             <!-- Bone Scale -->
             <div class="metric-card" style="margin:0; padding:20px;">
-                <div class="metric-label">BONE SCALE CALIB</div>
+                <div class="metric-label">신체 보정 정확도</div>
                 <div class="metric-value" style="color:#2979FF; font-size:24px;" id="scaleVal">98%</div>
-                <div style="font-size:10px; color:#666; margin-top:4px;" id="analysisModeBadge">Biomimetic Lifting
-                    Active</div>
+                <div style="font-size:10px; color:#666; margin-top:4px;" id="analysisModeBadge">생체역학 분석 활성화</div>
             </div>
         </div>
 
         <!-- Kinematic Sequence Graph -->
         <div class="metric-card">
-            <div class="metric-label">KINEMATIC SEQUENCE TIMING</div>
+            <div class="metric-label">키네마틱 시퀀스 타이밍</div>
             <div style="font-size:12px; color:#666; margin-bottom:15px;">
-                Ideal Order: <span style="color:#FF5252">Pelvis</span> → <span style="color:#448AFF">Torso</span> →
-                <span style="color:#69F0AE">Arm</span> → <span style="color:#E040FB">Hand</span>
+                이상적 순서: <span style="color:#FF5252">골반</span> → <span style="color:#448AFF">몸통</span> →
+                <span style="color:#69F0AE">팔</span> → <span style="color:#E040FB">손</span>
             </div>
 
             <div class="seq-graph" id="seqGraphPlaceholder">
@@ -741,7 +740,7 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
             <!-- Energy Efficiency Gauge -->
             <div class="metric-card" style="text-align: center;">
-                <div class="metric-label">ENERGY EFFICIENCY GAUGE</div>
+                <div class="metric-label">에너지 효율 게이지</div>
                 <div style="width: 180px; height: 180px; margin: 15px auto;">
                     <canvas id="energyGaugeCanvas"></canvas>
                 </div>
@@ -751,16 +750,16 @@
 
             <!-- Peak Timing Timeline -->
             <div class="metric-card">
-                <div class="metric-label">PEAK TIMING TIMELINE</div>
+                <div class="metric-label">피크 타이밍 타임라인</div>
                 <div style="height: 150px; margin-top: 15px;">
                     <canvas id="peakTimelineCanvas"></canvas>
                 </div>
                 <div id="timelineLegend"
                     style="display: flex; justify-content: space-around; font-size: 10px; color: #888; margin-top: 10px;">
-                    <span><span style="color:#FF5252">●</span> Pelvis</span>
-                    <span><span style="color:#448AFF">●</span> Torso</span>
-                    <span><span style="color:#69F0AE">●</span> Arm</span>
-                    <span><span style="color:#E040FB">●</span> Hand</span>
+                    <span><span style="color:#FF5252">●</span> 골반</span>
+                    <span><span style="color:#448AFF">●</span> 몸통</span>
+                    <span><span style="color:#69F0AE">●</span> 팔</span>
+                    <span><span style="color:#E040FB">●</span> 손</span>
                 </div>
             </div>
 
@@ -768,7 +767,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
                 <!-- Hip-Shoulder Separation -->
                 <div class="metric-card" style="text-align: center;">
-                    <div class="metric-label">🔄 HIP-SHOULDER SEPARATION</div>
+                    <div class="metric-label">🔄 힙-어깨 분리각</div>
                     <div id="hipShoulderValue"
                         style="font-size: 48px; font-weight: 800; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 15px 0;">
                         --°
@@ -778,7 +777,7 @@
                         분석 대기 중
                     </div>
                     <div id="hipShoulderMessage" style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">
-                        Foot Contact 시점 분석 예정
+                        착지 순간 분석 예정
                     </div>
                     <div style="font-size: 10px; color: var(--text-muted); margin-top: 8px; opacity: 0.6;">
                         이상적 범위: 40~60°
@@ -787,7 +786,7 @@
 
                 <!-- Normalized Metrics (Allometric Scaling) -->
                 <div class="metric-card">
-                    <div class="metric-label">📏 NORMALIZED METRICS</div>
+                    <div class="metric-label">📏 정규화 지표</div>
                     <div id="normalizedMetricsDisplay" style="margin-top: 15px;">
                         <div
                             style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-glass);">
@@ -972,6 +971,68 @@
                 }
             }
             initAI();
+
+            // 🔧 NEW: Check for video passed from index.html via sessionStorage
+            function checkForAutoLoad() {
+                const videoUrl = sessionStorage.getItem('pitchcraft_video_url');
+                const videoName = sessionStorage.getItem('pitchcraft_video_name');
+
+                if (videoUrl) {
+                    console.log('🔄 Auto-loading video from index.html:', videoName);
+
+                    // Clear sessionStorage to prevent re-loading on refresh
+                    sessionStorage.removeItem('pitchcraft_video_url');
+                    sessionStorage.removeItem('pitchcraft_video_name');
+                    sessionStorage.removeItem('pitchcraft_video_size');
+
+                    // Show processing screen
+                    document.getElementById('uploadScreen').style.display = 'none';
+                    document.getElementById('processScreen').style.display = 'flex';
+                    document.getElementById('processStatus').innerText = "영상 로딩 중...";
+                    document.getElementById('processDetail').innerText = videoName || '투구 영상';
+
+                    // Error handler for video loading
+                    video.onerror = (e) => {
+                        console.error("❌ Video loading error:", video.error);
+                        alert("❌ 영상을 로드할 수 없습니다.\nMP4(H.264) 형식 권장");
+                        document.getElementById('processScreen').style.display = 'none';
+                        document.getElementById('uploadScreen').style.display = 'block';
+                    };
+
+                    // Handler for metadata loaded
+                    video.onloadedmetadata = () => {
+                        console.log(`✅ Video Metadata Loaded: ${video.videoWidth}x${video.videoHeight}`);
+
+                        // Store dimensions
+                        storedVideoWidth = video.videoWidth || 640;
+                        storedVideoHeight = video.videoHeight || 480;
+
+                        if (detector) {
+                            console.log("🚀 Detector ready, starting analysis");
+                            startAnalysis();
+                        } else {
+                            document.getElementById('processDetail').innerText = "AI 모델 대기 중...";
+                            let attempts = 0;
+                            let check = setInterval(() => {
+                                attempts++;
+                                if (detector) {
+                                    clearInterval(check);
+                                    startAnalysis();
+                                } else if (attempts > 40) { // 20 seconds
+                                    clearInterval(check);
+                                    alert("⏰ AI 모델 로딩 실패. 페이지를 새로고침해주세요.");
+                                }
+                            }, 500);
+                        }
+                    };
+
+                    // Set video source
+                    video.src = videoUrl;
+                }
+            }
+
+            // Run auto-load check after a short delay to ensure page is ready
+            setTimeout(checkForAutoLoad, 500);
 
             function handleFile(files) {
                 if (!files.length) {
@@ -3927,17 +3988,20 @@ ${issues.length > 0 ? issues.map((issue, i) => `${i + 1}. ${issue}`).join('\n') 
                 // 총점 계산 (하이브리드)
                 // Base Score (Claude) - Penalties (Gemini)
                 const baseScore = sequenceScore + uniformityScore + amplificationScore;
-                const totalScore = Math.max(0, Math.min(100, baseScore - penaltyScore));
+                // 🔧 NEW: 최소 점수 15점 보장 (0점은 사용자 신뢰 상실)
+                const rawScore = Math.max(0, Math.min(100, baseScore - penaltyScore));
+                const totalScore = Math.max(15, rawScore); // 최소 15점 보장
 
-                console.log(`Hybrid Scoring: Base(${baseScore}) - Penalty(${penaltyScore}) = ${totalScore}`);
+                console.log(`Hybrid Scoring: Base(${baseScore}) - Penalty(${penaltyScore}) = ${rawScore} → Final: ${totalScore}`);
 
-                // 등급 결정
-                let grade;
-                if (totalScore >= 90) grade = "S";
-                else if (totalScore >= 80) grade = "A";
-                else if (totalScore >= 70) grade = "B";
-                else if (totalScore >= 60) grade = "C";
-                else grade = "D";
+                // 등급 결정 (한국어로 변경)
+                let grade, gradeLabel;
+                if (totalScore >= 90) { grade = "S"; gradeLabel = "S 등급 (프로 수준)"; }
+                else if (totalScore >= 80) { grade = "A"; gradeLabel = "A 등급 (우수)"; }
+                else if (totalScore >= 70) { grade = "B"; gradeLabel = "B 등급 (양호)"; }
+                else if (totalScore >= 60) { grade = "C"; gradeLabel = "C 등급 (보통)"; }
+                else if (totalScore >= 40) { grade = "D"; gradeLabel = "D 등급 (개선 필요)"; }
+                else { grade = "D"; gradeLabel = "D 등급 (개선 필요)"; }
 
                 // 피드백 메시지 생성
                 let feedback = "";
