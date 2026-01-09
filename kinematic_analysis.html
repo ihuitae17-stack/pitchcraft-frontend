@@ -974,36 +974,89 @@
             initAI();
 
             function handleFile(files) {
-                if (!files.length) return;
-                const url = URL.createObjectURL(files[0]);
+                if (!files.length) {
+                    console.log("⚠️ handleFile called with no files");
+                    return;
+                }
+
+                const file = files[0];
+                console.log(`📁 File selected: ${file.name}, type: ${file.type}, size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+
+                // 🔧 NEW: Validate file type
+                if (!file.type.startsWith('video/')) {
+                    alert("❌ 비디오 파일만 업로드 가능합니다.\n지원 형식: MP4, MOV, AVI, WebM");
+                    return;
+                }
+
+                const url = URL.createObjectURL(file);
+                console.log(`🔗 Created blob URL: ${url}`);
 
                 document.getElementById('uploadScreen').style.display = 'none';
                 document.getElementById('processScreen').style.display = 'flex';
+                document.getElementById('processStatus').innerText = "영상 로딩 중...";
+                document.getElementById('processDetail').innerText = file.name;
+
+                // 🔧 NEW: Error handler for video loading failures
+                video.onerror = (e) => {
+                    console.error("❌ Video loading error:", video.error);
+                    const errorCode = video.error ? video.error.code : 'unknown';
+                    let errorMsg = "영상을 로드할 수 없습니다.";
+
+                    switch (errorCode) {
+                        case 1: errorMsg = "영상 로딩이 중단되었습니다."; break;
+                        case 2: errorMsg = "네트워크 오류로 영상을 로드할 수 없습니다."; break;
+                        case 3: errorMsg = "영상 디코딩 오류 - 지원되지 않는 형식일 수 있습니다."; break;
+                        case 4: errorMsg = "이 영상 형식은 지원되지 않습니다. H.264 MP4 권장."; break;
+                    }
+
+                    alert(`❌ ${errorMsg}\n\n파일: ${file.name}\n크기: ${(file.size / 1024 / 1024).toFixed(2)}MB\n\nMP4(H.264) 형식으로 변환 후 다시 시도해주세요.`);
+
+                    // Return to upload screen
+                    document.getElementById('processScreen').style.display = 'none';
+                    document.getElementById('uploadScreen').style.display = 'block';
+                };
 
                 // Handler BEFORE src to avoid race condition
                 video.onloadedmetadata = () => {
-                    console.log("Video Metadata Loaded");
+                    console.log(`✅ Video Metadata Loaded: ${video.videoWidth}x${video.videoHeight}, duration: ${video.duration}s`);
+
+                    // Validate video dimensions
+                    if (video.videoWidth === 0 || video.videoHeight === 0) {
+                        console.error("❌ Invalid video dimensions");
+                        alert("❌ 영상 정보를 읽을 수 없습니다.\n다른 영상 파일로 시도해주세요.");
+                        document.getElementById('processScreen').style.display = 'none';
+                        document.getElementById('uploadScreen').style.display = 'block';
+                        return;
+                    }
+
                     if (detector) {
+                        console.log("🚀 Detector ready, starting analysis immediately");
                         startAnalysis();
                     } else {
                         document.getElementById('processDetail').innerText = "AI 모델을 기다리는 중...";
+                        console.log("⏳ Waiting for detector...");
                         // Wait for detector
                         let attempts = 0;
                         let check = setInterval(() => {
                             attempts++;
                             if (detector) {
                                 clearInterval(check);
+                                console.log(`✅ Detector ready after ${attempts * 0.5}s`);
                                 startAnalysis();
-                            } else if (attempts > 20) { // 10 seconds timeout
+                            } else if (attempts > 30) { // 15 seconds timeout (increased from 10)
                                 clearInterval(check);
-                                alert("AI 모델 로딩이 지연되고 있습니다. 네트워크 상태를 확인하거나 페이지를 새로고침해주세요.");
-                                location.reload();
+                                console.error("❌ Detector timeout after 15 seconds");
+                                // 🔧 CHANGED: Don't reload, show user-friendly message instead
+                                alert("⏰ AI 모델 로딩이 지연되고 있습니다.\n\n1. 네트워크 연결을 확인해주세요\n2. 페이지를 새로고침해주세요\n3. 최신 브라우저(Chrome/Edge)를 사용해주세요");
+                                document.getElementById('processStatus').innerText = "AI 로드 실패 - 새로고침 필요";
+                                document.getElementById('processDetail').innerHTML = '<a href="javascript:location.reload()" style="color:#00E676">🔄 여기를 클릭하여 새로고침</a>';
                             }
                         }, 500);
                     }
                 };
 
-                // Set src after handler
+                // Set src after handlers are attached
+                console.log("🎬 Setting video.src...");
                 video.src = url;
             }
             async function startAnalysis() {
