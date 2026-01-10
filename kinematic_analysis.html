@@ -4801,27 +4801,33 @@ ${issues.length > 0 ? issues.map((issue, i) => `${i + 1}. ${issue}`).join('\n') 
                 // efficiencyResult.score 사용 (기존 휴리스틱 efficiency 대신)
                 document.getElementById('efficiencyScore').innerText = efficiencyResult.score;
 
-                // Grade Text Update
+                // Grade Text Update (한국어)
                 const gradeEl = document.getElementById('efficiencyGrade');
-                gradeEl.innerText = efficiencyResult.grade + " Grade (" + (efficiencyResult.grade === 'S' ? "Pro Level" : efficiencyResult.grade === 'A' ? "Great" : efficiencyResult.grade === 'B' ? "Good" : efficiencyResult.grade === 'C' ? "Fair" : "Needs Work") + ")";
+                const gradeLabels = { 'S': '프로 수준', 'A': '우수', 'B': '양호', 'C': '보통', 'D': '개선 필요' };
+                gradeEl.innerText = efficiencyResult.grade + " 등급 (" + (gradeLabels[efficiencyResult.grade] || '분석 완료') + ")";
                 // Color Update
                 if (efficiencyResult.score >= 80) gradeEl.style.color = "#00E676"; // Green
                 else if (efficiencyResult.score >= 60) gradeEl.style.color = "#FFA726"; // Orange
                 else gradeEl.style.color = "#FF5252"; // Red
 
-                // 🔧 NEW: 드라이 스윙일 때 구속 숨기기
-                if (isDrySwing) {
+                // 🔧 IMPROVED: 공이 감지되지 않으면 구속 표시 안함
+                const ballNotReliable = isDrySwing || speedMethod === 'HAND_ESTIMATION';
+
+                if (ballNotReliable) {
                     document.getElementById('speedVal').innerText = "N/A";
                     document.getElementById('speedDetail').innerHTML = `
                     <div style="padding: 8px; text-align: center;">
-                        <div style="color: #FFA726; font-size: 11px; margin-bottom: 4px;">🏋️ 폼 분석 전용</div>
-                        <div style="color: #888; font-size: 10px;">공이 감지되지 않았습니다</div>
-                        <div style="color: #666; font-size: 9px; margin-top: 4px;">
-                            (드라이 스윙 / 섀도우 피칭)
+                        <div style="color: #FFA726; font-size: 11px; margin-bottom: 4px;">
+                            ${isDrySwing ? '🏋️ 폼 분석 전용' : '⚠️ 구속 측정 불가'}
+                        </div>
+                        <div style="color: #888; font-size: 10px;">공이 영상에서 감지되지 않았습니다</div>
+                        <div style="color: #666; font-size: 9px; margin-top: 6px; line-height: 1.4;">
+                            💡 정확한 구속 측정을 위해서는<br>
+                            공이 명확하게 보이는 영상이 필요합니다
                         </div>
                     </div>
                 `;
-                    console.log("🏋️ Speed hidden for dry swing video");
+                    console.log("⚠️ Speed hidden - ball not reliably detected");
                 } else {
                     document.getElementById('speedVal').innerText = speedKmh + " km/h";
 
