@@ -656,6 +656,66 @@
             </div>
         </div>
 
+        <!-- 🔍 분석 품질 진단 (Analysis Quality Diagnosis) -->
+        <div id="qualityDiagnosisCard" class="metric-card"
+            style="margin-bottom: 15px; border: 1px solid rgba(255,167,38,0.3); display: none;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+                <span style="font-size:24px;">🔍</span>
+                <div>
+                    <div class="metric-label" style="margin-bottom:2px;">분석 품질 진단</div>
+                    <div id="qualityOverallStatus" style="font-size:12px; color:#FFA726;">분석 중...</div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <!-- 포즈 감지율 -->
+                <div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:11px; color:#888;">포즈 감지율</span>
+                        <span id="poseDetectionIcon" style="font-size:14px;">⏳</span>
+                    </div>
+                    <div id="poseDetectionRate" style="font-size:18px; font-weight:bold; color:#fff;">--%</div>
+                    <div id="poseDetectionMsg" style="font-size:10px; color:#888; margin-top:4px;"></div>
+                </div>
+
+                <!-- 분석 프레임 수 -->
+                <div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:11px; color:#888;">분석 프레임 수</span>
+                        <span id="frameCountIcon" style="font-size:14px;">⏳</span>
+                    </div>
+                    <div id="frameCountValue" style="font-size:18px; font-weight:bold; color:#fff;">--</div>
+                    <div id="frameCountMsg" style="font-size:10px; color:#888; margin-top:4px;"></div>
+                </div>
+
+                <!-- 공 감지 여부 -->
+                <div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:11px; color:#888;">공 감지</span>
+                        <span id="ballDetectionIcon" style="font-size:14px;">⏳</span>
+                    </div>
+                    <div id="ballDetectionStatus" style="font-size:18px; font-weight:bold; color:#fff;">--</div>
+                    <div id="ballDetectionMsg" style="font-size:10px; color:#888; margin-top:4px;"></div>
+                </div>
+
+                <!-- 영상 해상도 -->
+                <div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:11px; color:#888;">영상 해상도</span>
+                        <span id="resolutionIcon" style="font-size:14px;">⏳</span>
+                    </div>
+                    <div id="resolutionValue" style="font-size:18px; font-weight:bold; color:#fff;">--</div>
+                    <div id="resolutionMsg" style="font-size:10px; color:#888; margin-top:4px;"></div>
+                </div>
+            </div>
+
+            <!-- 종합 안내 메시지 -->
+            <div id="qualityAdvice"
+                style="background:rgba(255,82,82,0.1); border:1px solid rgba(255,82,82,0.3); padding:12px; border-radius:8px; margin-top:15px; font-size:12px; color:#ff8a80; line-height:1.5; display:none;">
+                <!-- JS로 채워짐 -->
+            </div>
+        </div>
+
         <!-- 1. Energy Efficiency (The Core Metric) -->
         <div class="metric-card">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
@@ -4038,6 +4098,156 @@ ${issues.length > 0 ? issues.map((issue, i) => `${i + 1}. ${issue}`).join('\n') 
             }
 
             // ========================================
+            // 🔍 분석 품질 진단 함수
+            // 사용자에게 분석 신뢰도와 그 이유를 설명
+            // ========================================
+            function updateQualityDiagnosis(qualityData) {
+                const card = document.getElementById('qualityDiagnosisCard');
+                if (!card) return;
+
+                card.style.display = 'block';
+
+                let issues = [];
+                let overallQuality = 'HIGH'; // HIGH, MEDIUM, LOW
+
+                // 1. 포즈 감지율 분석
+                const poseRate = qualityData.poseDetectionRate || 0;
+                const poseEl = document.getElementById('poseDetectionRate');
+                const poseIcon = document.getElementById('poseDetectionIcon');
+                const poseMsg = document.getElementById('poseDetectionMsg');
+
+                poseEl.innerText = poseRate.toFixed(0) + '%';
+                if (poseRate >= 80) {
+                    poseIcon.innerText = '✅';
+                    poseEl.style.color = '#00E676';
+                    poseMsg.innerText = '양호';
+                } else if (poseRate >= 50) {
+                    poseIcon.innerText = '⚠️';
+                    poseEl.style.color = '#FFA726';
+                    poseMsg.innerText = '투수 전신이 화면에 잘 보여야 합니다';
+                    issues.push('투수 전신이 화면에 완전히 보이지 않음');
+                    overallQuality = 'MEDIUM';
+                } else {
+                    poseIcon.innerText = '❌';
+                    poseEl.style.color = '#FF5252';
+                    poseMsg.innerText = '포즈 인식 실패 - 화질/구도 확인';
+                    issues.push('포즈 인식 실패: 투수가 잘 보이지 않거나 화질이 낮음');
+                    overallQuality = 'LOW';
+                }
+
+                // 2. 프레임 수 분석
+                const frameCount = qualityData.frameCount || 0;
+                const frameEl = document.getElementById('frameCountValue');
+                const frameIcon = document.getElementById('frameCountIcon');
+                const frameMsg = document.getElementById('frameCountMsg');
+
+                frameEl.innerText = frameCount + '프레임';
+                if (frameCount >= 30) {
+                    frameIcon.innerText = '✅';
+                    frameEl.style.color = '#00E676';
+                    frameMsg.innerText = '충분한 데이터';
+                } else if (frameCount >= 15) {
+                    frameIcon.innerText = '⚠️';
+                    frameEl.style.color = '#FFA726';
+                    frameMsg.innerText = '더 긴 영상 권장';
+                    issues.push('프레임 수 부족: 1~2초 이상의 영상 권장');
+                    if (overallQuality === 'HIGH') overallQuality = 'MEDIUM';
+                } else {
+                    frameIcon.innerText = '❌';
+                    frameEl.style.color = '#FF5252';
+                    frameMsg.innerText = '영상이 너무 짧음';
+                    issues.push('영상이 너무 짧음: 투구 동작 전체가 포함되어야 함');
+                    overallQuality = 'LOW';
+                }
+
+                // 3. 공 감지 분석
+                const ballDetected = qualityData.ballDetected;
+                const ballFrames = qualityData.ballFrames || 0;
+                const ballEl = document.getElementById('ballDetectionStatus');
+                const ballIcon = document.getElementById('ballDetectionIcon');
+                const ballMsg = document.getElementById('ballDetectionMsg');
+
+                if (ballDetected && ballFrames >= 5) {
+                    ballIcon.innerText = '✅';
+                    ballEl.innerText = '감지됨';
+                    ballEl.style.color = '#00E676';
+                    ballMsg.innerText = ballFrames + '프레임에서 추적';
+                } else if (qualityData.isDrySwing) {
+                    ballIcon.innerText = '🏋️';
+                    ballEl.innerText = '드라이 스윙';
+                    ballEl.style.color = '#FFA726';
+                    ballMsg.innerText = '공 없이 연습 - 구속 측정 불가';
+                } else {
+                    ballIcon.innerText = '❌';
+                    ballEl.innerText = '미감지';
+                    ballEl.style.color = '#FF5252';
+                    ballMsg.innerText = '공이 보이지 않음 - 구속 추정치 사용';
+                    issues.push('공이 감지되지 않음: 구속은 손 속도 기반 추정치');
+                }
+
+                // 4. 해상도 분석
+                const width = qualityData.videoWidth || 0;
+                const height = qualityData.videoHeight || 0;
+                const pixels = width * height;
+                const resEl = document.getElementById('resolutionValue');
+                const resIcon = document.getElementById('resolutionIcon');
+                const resMsg = document.getElementById('resolutionMsg');
+
+                resEl.innerText = width + '×' + height;
+                if (pixels >= 921600) { // 1280x720 이상
+                    resIcon.innerText = '✅';
+                    resEl.style.color = '#00E676';
+                    resMsg.innerText = 'HD 화질';
+                } else if (pixels >= 307200) { // 640x480 이상
+                    resIcon.innerText = '⚠️';
+                    resEl.style.color = '#FFA726';
+                    resMsg.innerText = '해상도 낮음 - HD 권장';
+                    issues.push('해상도가 낮음: 720p 이상 권장');
+                    if (overallQuality === 'HIGH') overallQuality = 'MEDIUM';
+                } else {
+                    resIcon.innerText = '❌';
+                    resEl.style.color = '#FF5252';
+                    resMsg.innerText = '해상도 매우 낮음';
+                    issues.push('해상도 매우 낮음: 포즈 인식 정확도 저하');
+                    overallQuality = 'LOW';
+                }
+
+                // 종합 상태 업데이트
+                const overallEl = document.getElementById('qualityOverallStatus');
+                const adviceEl = document.getElementById('qualityAdvice');
+
+                if (overallQuality === 'HIGH') {
+                    overallEl.innerText = '✅ 분석 신뢰도 높음';
+                    overallEl.style.color = '#00E676';
+                    card.style.borderColor = 'rgba(0,230,118,0.3)';
+                    adviceEl.style.display = 'none';
+                } else if (overallQuality === 'MEDIUM') {
+                    overallEl.innerText = '⚠️ 분석 신뢰도 보통';
+                    overallEl.style.color = '#FFA726';
+                    card.style.borderColor = 'rgba(255,167,38,0.3)';
+                    adviceEl.style.display = 'block';
+                    adviceEl.style.background = 'rgba(255,167,38,0.1)';
+                    adviceEl.style.borderColor = 'rgba(255,167,38,0.3)';
+                    adviceEl.style.color = '#FFA726';
+                } else {
+                    overallEl.innerText = '❌ 분석 신뢰도 낮음';
+                    overallEl.style.color = '#FF5252';
+                    card.style.borderColor = 'rgba(255,82,82,0.3)';
+                    adviceEl.style.display = 'block';
+                }
+
+                // 문제점 표시
+                if (issues.length > 0) {
+                    adviceEl.innerHTML = '<b>📋 분석 신뢰도가 낮은 이유:</b><br>' +
+                        issues.map((issue, i) => `${i + 1}. ${issue}`).join('<br>') +
+                        '<br><br><b>💡 개선 방법:</b> 밝은 곳에서 투수 전신이 보이도록 720p 이상으로 촬영해주세요.';
+                }
+
+                console.log('Quality Diagnosis:', { overallQuality, issues, qualityData });
+                return overallQuality;
+            }
+
+            // ========================================
             // 🟡 PHASE 2: 에너지 효율 게이지 (도넛 차트)
             // Chart.js 기반 원형 게이지 시각화
             // ========================================
@@ -4663,6 +4873,25 @@ ${issues.length > 0 ? issues.map((issue, i) => `${i + 1}. ${issue}`).join('\n') 
 
                 // 실제 키네마틱 시퀀스 그래프 렌더링 (Chart.js 사용)
                 drawRealKinematicChart(angularVelocityData, sequenceResult, actualFps);
+
+                // ========================================
+                // 🔍 품질 진단 표시
+                // ========================================
+                const goodPoseFrames = poseHistory.filter(p =>
+                    p.keypoints && p.keypoints.filter(k => k.score > 0.3).length >= 10
+                ).length;
+                const poseDetectionRate = poseHistory.length > 0 ? (goodPoseFrames / poseHistory.length) * 100 : 0;
+
+                updateQualityDiagnosis({
+                    poseDetectionRate: poseDetectionRate,
+                    frameCount: poseHistory.length,
+                    ballDetected: speedMethod === 'BALL_TRACKING',
+                    ballFrames: ballTrackingResult ? (ballTrackingResult.trajectory?.length || 0) : 0,
+                    isDrySwing: isDrySwing,
+                    videoWidth: storedVideoWidth || video.videoWidth || 640,
+                    videoHeight: storedVideoHeight || video.videoHeight || 480
+                });
+
                 startReplay();
             }
 
